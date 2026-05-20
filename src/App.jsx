@@ -7,7 +7,6 @@ import AdminPanel from './components/AdminPanel';
 import Footer from './components/Footer';
 import { useTheme } from './context/ThemeContext';
 
-// শুরুর ডেমো প্রোডাক্ট ডেটা (যদি লোকাল স্টোরেজে কিছু না থাকে)
 const initialProducts = [
   { id: 1, name: "Smart Watch Series 9", price: 3500, description: "অ্যামোলেড ডিসপ্লে, রিয়েল টাইম হার্ট রেট এবং ব্লাড অক্সিজেন মনিটরিং ট্র্যাকার সহ ওয়াটারপ্রুফ স্মার্টওয়াচ।", image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=500", reviews: [] },
   { id: 2, name: "Wireless Bluetooth Earbuds", price: 1800, description: "অ্যাক্টিভ নয়েজ ক্যান্সেলেশন (ANC) এবং একটানা ৩০ ঘণ্টা ব্যাকআপ ক্ষমতা সম্পন্ন প্রিমিয়াম ইয়ারবাডস।", image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500", reviews: [] }
@@ -15,7 +14,7 @@ const initialProducts = [
 
 function MainApp() {
   const { darkMode } = useTheme();
-  const [page, setPage] = useState('shop'); // পেজ স্টেট: 'shop', 'cart', 'admin'
+  const [page, setPage] = useState('shop'); 
   const [products, setProducts] = useState(() => {
     const localData = localStorage.getItem('khan_enterprise_products');
     return localData ? JSON.parse(localData) : initialProducts;
@@ -25,12 +24,10 @@ function MainApp() {
     return localCart ? JSON.parse(localCart) : [];
   });
 
-  // প্রোডাক্ট ডেটা লোকাল স্টোরেজে সেভ রাখা
   useEffect(() => {
     localStorage.setItem('khan_enterprise_products', JSON.stringify(products));
   }, [products]);
 
-  // কার্ট ডেটা লোকাল স্টোরেজে সেভ রাখা
   useEffect(() => {
     localStorage.setItem('khan_enterprise_cart', JSON.stringify(cart));
   }, [cart]);
@@ -39,42 +36,36 @@ function MainApp() {
   const addToCart = (product) => setCart([...cart, product]);
   const removeFromCart = (index) => setCart(cart.filter((_, i) => i !== index));
   const clearCart = () => setCart([]);
-
+  
   const addReview = (productId, review) => {
     setProducts(products.map(p => p.id === productId ? { ...p, reviews: [...p.reviews, review] } : p));
   };
 
   return (
-    // overflow-x-hidden এবং w-full দেওয়ার কারণে ডানপাশের সাদা খালি জায়গা চিরতরে হাওয়া হয়ে যাবে
-    <div className={`min-h-screen w-full overflow-x-hidden flex flex-col transition-colors duration-500 ${darkMode
-        ? 'bg-slate-950 text-slate-50 selection:bg-cyan-500/30'
-        : 'bg-slate-50 text-slate-900 selection:bg-blue-500/30'
-      }`}>
-
-      {/* গ্লোবাল নিয়ন ব্যাকগ্রাউন্ড গ্লো ইফেক্ট (প্রিমিয়াম লুকের জন্য) */}
+    <div className={`min-h-screen w-full overflow-x-hidden flex flex-col transition-colors duration-300 ${
+      darkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
+    }`}>
+      
       {darkMode && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-gradient-to-b from-cyan-500/5 via-indigo-500/0 to-transparent blur-3xl pointer-events-none z-0" />
       )}
-
-      {/* নেভিগেশন বার */}
+      
       <Navbar cartCount={cart.length} setPage={setPage} currentPage={page} />
-
-      {/* মেইন কন্টেন্ট এরিয়া */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 z-10 pb-24 md:pb-12">
+      
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 z-10">
         {page === 'shop' && (
-          <div className="animate-fade-in">
-            {/* প্রিমিয়াম ব্যানার/টাইটেল সেকশন */}
-            <div className="text-center mb-10 sm:mb-16 relative">
-              <h1 className="text-3xl sm:text-6xl font-black tracking-tight uppercase bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent drop-shadow-sm">
-                Exclusive Collection
+          <div>
+            <div className="text-center mb-10 sm:mb-16">
+              {/* text-slate-950 dark:text-white ব্যবহারের ফলে লাইট মোডে লেখা একদম কুচকুচে কালো ও স্পষ্ট দেখাবে */}
+              <h1 className="text-3xl sm:text-6xl font-black tracking-tight uppercase text-slate-950 dark:text-white drop-shadow-sm">
+                এক্সক্লুসিভ কালেকশন
               </h1>
-              <p className="text-xs sm:text-base text-slate-500 dark:text-cyan-400/80 font-medium tracking-wide mt-3 max-w-md mx-auto">
-                Khan enterprise অরিজিনাল গ্যাজেট ও আধুনিক লাইফস্টাইল পণ্য সামগ্রী
+              <p className="text-xs sm:text-base text-slate-600 dark:text-cyan-400 font-semibold tracking-wide mt-3 max-w-md mx-auto">
+                খান এন্টারপ্রাইজের অরিজিনাল গ্যাজেট ও আধুনিক লাইফস্টাইল পণ্য সামগ্রী
               </p>
               <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-cyan-400 dark:to-blue-500 mx-auto mt-4 rounded-full" />
             </div>
-
-            {/* প্রোডাক্ট গ্রিড (১০০% রেসপন্সিভ মোবাইল ফ্রেন্ডলি) */}
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {products.map(product => (
                 <ProductCard key={product.id} product={product} addToCart={addToCart} addReview={addReview} />
@@ -83,13 +74,12 @@ function MainApp() {
           </div>
         )}
 
-        {/* পেজ কন্ডিশনাল রেন্ডারিং */}
         {page === 'cart' && (
           <div className="w-full max-w-4xl mx-auto">
             <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} setPage={setPage} />
           </div>
         )}
-
+        
         {page === 'admin' && (
           <div className="w-full max-w-3xl mx-auto">
             <AdminPanel addProduct={addProduct} setPage={setPage} />
@@ -97,7 +87,6 @@ function MainApp() {
         )}
       </main>
 
-      {/* ফুটার */}
       <Footer />
     </div>
   );
@@ -106,7 +95,11 @@ function MainApp() {
 export default function App() {
   return (
     <ThemeProvider>
-      <MainApp />
+      <AppContent />
     </ThemeProvider>
   );
+}
+
+function AppContent() {
+  return <MainApp />;
 }
