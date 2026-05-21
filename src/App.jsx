@@ -3,7 +3,7 @@ import ProductCard from './components/ProductCard';
 import AdminPanel from './components/AdminPanel';
 import Cart from './components/Cart';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, PlusCircle, LayoutGrid, Sun, Moon, ShieldCheck, Heart, Settings, Edit, Trash2 } from 'lucide-react';
+import { ShoppingBag, PlusCircle, LayoutGrid, Sun, Moon, ShieldCheck, Heart, Settings, Edit, Trash2, Lock, KeyRound, Eye, EyeOff } from 'lucide-react';
 
 const initialProducts = [
   {
@@ -32,10 +32,18 @@ const initialProducts = [
 
 export default function App() {
   const [page, setPage] = useState('shop');
-  const [adminTab, setAdminTab] = useState('add'); // 'add' অথবা 'manage'
-  const [editingProduct, setEditingProduct] = useState(null); // যে পণ্যটি এডিট করা হচ্ছে
+  const [adminTab, setAdminTab] = useState('add'); 
+  const [editingProduct, setEditingProduct] = useState(null); 
   
-  // ডার্ক মোড স্টেট ফিক্সড
+  // 🔐 সিকিউরিটি স্টেটসমূহ
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false); // অ্যাডমিন লগইন আছে কিনা
+  const [showLockModal, setShowLockModal] = useState(false); // পাসওয়ার্ড পপ-আপ দেখাবে কিনা
+  const [adminPassword, setAdminPassword] = useState(''); // ইনপুট পাসওয়ার্ড
+  const [showPasswordText, setShowPasswordText] = useState(false); // পাসওয়ার্ড হাইড/শো
+
+  // 🔑 আপনার এবং মডারেটরদের জন্য সিক্রেট পাসওয়ার্ড (আপনি চাইলে এটি পরিবর্তন করতে পারেন)
+  const SECRET_ADMIN_PASSWORD = "khanenterprise05"; 
+
   const [darkMode, setDarkMode] = useState(() => {
     const savedMode = localStorage.getItem('khan_ent_dark_mode');
     return savedMode === 'true';
@@ -48,7 +56,6 @@ export default function App() {
 
   const [cart, setCart] = useState([]);
 
-  // লাইট/ডার্ক মোড পারফেক্ট সিঙ্ক লজিক
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -58,24 +65,46 @@ export default function App() {
     localStorage.setItem('khan_ent_dark_mode', darkMode);
   }, [darkMode]);
 
-  // নতুন প্রোডাক্ট অ্যাড করার ফাংশন
+  // পাসওয়ার্ড ভেরিফিকেশন ফাংশন
+  const handleAdminAccessSubmit = (e) => {
+    e.preventDefault();
+    if (adminPassword === SECRET_ADMIN_PASSWORD) {
+      setIsAdminLoggedIn(true);
+      setShowLockModal(false);
+      setPage('admin');
+      setAdminPassword('');
+    } else {
+      alert('🚫 ভুল পাসওয়ার্ড! আপনি খান এন্টারপ্রাইজের অনুমোদিত অ্যাডমিন বা মডারেটর নন।');
+      setAdminPassword('');
+    }
+  };
+
+  // অ্যাডমিন প্যানেল বাটনে ক্লিক হ্যান্ডেলার
+  const handleAdminButtonClick = () => {
+    if (isAdminLoggedIn) {
+      setPage('admin');
+      setAdminTab('add');
+      setEditingProduct(null);
+    } else {
+      setShowLockModal(true); // লগইন না থাকলে পাসওয়ার্ড পপ-আপ লক স্ক্রিন আসবে
+    }
+  };
+
   const addProduct = (newProduct) => {
     const updated = [newProduct, ...products];
     setProducts(updated);
     localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
   };
 
-  // বিদ্যমান প্রোডাক্ট এডিট/আপডেট করার আসল ফাংশন
   const updateProduct = (updatedProduct) => {
     const updated = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
     setProducts(updated);
     localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
     setEditingProduct(null);
-    setAdminTab('manage'); // এডিট শেষে ম্যানেজ লিস্টে ফেরত যাবে
+    setAdminTab('manage');
     alert('প্রোডাক্টের সমস্ত তথ্য সফলভাবে পরিবর্তন করা হয়েছে!');
   };
 
-  // প্রোডাক্ট ডিলিট করার ফাংশন
   const deleteProduct = (id) => {
     if(window.confirm("আপনি কি নিশ্চিত যে এই প্রোডাক্টটি স্টোর থেকে চিরতরে মুছে ফেলতে চান?")) {
       const updated = products.filter(p => p.id !== id);
@@ -100,12 +129,11 @@ export default function App() {
   const clearCart = () => setCart([]);
 
   return (
-    // লাইট মোড ও ডার্ক মোডের থিম কালার কন্ডিশন এখানে লক করা হয়েছে
     <div className={`min-h-screen transition-colors duration-300 font-sans ${
       darkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     }`}>
       
-      {/* 🌟 প্রিমিয়াম হেডার টপ বার */}
+      {/* 🌟 প্রিমিয়াম হেডার ٹপ বার */}
       <header className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-sm transition-colors">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           
@@ -131,13 +159,15 @@ export default function App() {
               <LayoutGrid size={16} /> <span className="hidden sm:inline">শপ</span>
             </button>
 
+            {/* সিকিউরড অ্যাডমিন বাটন */}
             <button 
-              onClick={() => { setPage('admin'); setAdminTab('add'); setEditingProduct(null); }}
+              onClick={handleAdminButtonClick}
               className={`p-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all ${
                 page === 'admin' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              <PlusCircle size={16} /> <span className="hidden sm:inline">অ্যাডমিন</span>
+              <Lock size={14} className={isAdminLoggedIn ? "text-emerald-500" : "text-slate-400"} />
+              <span className="hidden sm:inline">অ্যাডমিন</span>
             </button>
 
             <button 
@@ -188,35 +218,36 @@ export default function App() {
           )}
 
           {/* ২. ডাইনামিক অ্যাডমিন প্যানেল ও লাইভ প্রোডাক্ট এডিটর */}
-          {page === 'admin' && (
+          {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
               
-              {/* এডমিন সাব-ট্যাব কন্ট্রোল */}
-              <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 flex-wrap gap-2">
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => { setAdminTab('add'); setEditingProduct(null); }}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${adminTab === 'add' && !editingProduct ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 border dark:border-slate-800'}`}
+                  >
+                    নতুন প্রোডাক্ট যোগ করুন
+                  </button>
+                  <button 
+                    onClick={() => { setAdminTab('manage'); setEditingProduct(null); }}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${adminTab === 'manage' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 border dark:border-slate-800'}`}
+                  >
+                    প্রোডাক্ট ম্যানেজ ও এডিট করুন ({products.length})
+                  </button>
+                </div>
+                {/* লগআউট বাটন এডমিন সিকিউরিটির জন্য */}
                 <button 
-                  onClick={() => { setAdminTab('add'); setEditingProduct(null); }}
-                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${adminTab === 'add' && !editingProduct ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 border dark:border-slate-800'}`}
+                  onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }}
+                  className="px-3 py-1.5 text-xs font-bold rounded-lg text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all"
                 >
-                  নতুন প্রোডাক্ট যোগ করুন
-                </button>
-                <button 
-                  onClick={() => { setAdminTab('manage'); setEditingProduct(null); }}
-                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${adminTab === 'manage' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 border dark:border-slate-800'}`}
-                >
-                  প্রোডাক্ট ম্যানেজ ও এডিট করুন ({products.length})
+                  প্যানেল লক করুন (Logout)
                 </button>
               </div>
 
-              {/* কন্ডিশনাল রেন্ডারিং: অ্যাড অথবা এডিট ফর্ম */}
               {adminTab === 'add' || editingProduct ? (
-                <AdminPanel 
-                  addProduct={addProduct} 
-                  setPage={setPage} 
-                  editingProduct={editingProduct} 
-                  updateProduct={updateProduct} 
-                />
+                <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} />
               ) : (
-                /* 📝 সম্পূর্ণ নতুন প্রোডাক্ট ম্যানেজমেন্ট এডিট লিস্ট টেবিল */
                 <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 p-4 sm:p-6 shadow-xl">
                   <h3 className="text-lg font-black mb-4 flex items-center gap-1.5"><Settings size={18} /> স্টকের প্রোডাক্ট এডিট তালিকা</h3>
                   <div className="space-y-3">
@@ -229,20 +260,9 @@ export default function App() {
                             <p className="text-xs text-slate-400 mt-0.5">মূল্য: ৳{p.price} | স্টক: {p.stock} পিস</p>
                           </div>
                         </div>
-                        {/* এডিট এবং ডিলিট অ্যাকশন বাটন */}
                         <div className="flex gap-2 w-full sm:w-auto justify-end">
-                          <button 
-                            onClick={() => setEditingProduct(p)}
-                            className="flex items-center gap-1 text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl font-bold transition-colors"
-                          >
-                            <Edit size={14} /> এডিট (Edit)
-                          </button>
-                          <button 
-                            onClick={() => deleteProduct(p.id)}
-                            className="flex items-center gap-1 text-xs bg-rose-500 hover:bg-rose-600 text-white px-3 py-2 rounded-xl font-bold transition-colors"
-                          >
-                            <Trash2 size={14} /> ডিলিট
-                          </button>
+                          <button onClick={() => setEditingProduct(p)} className="flex items-center gap-1 text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl font-bold transition-colors"><Edit size={14} /> এডিট (Edit)</button>
+                          <button onClick={() => deleteProduct(p.id)} className="flex items-center gap-1 text-xs bg-rose-500 hover:bg-rose-600 text-white px-3 py-2 rounded-xl font-bold transition-colors"><Trash2 size={14} /> ডিলিট</button>
                         </div>
                       </div>
                     ))}
@@ -261,6 +281,63 @@ export default function App() {
 
         </AnimatePresence>
       </main>
+
+      {/* 🔐 অ্যাডমিন ও মডারেটর সিক্রেট লক স্ক্রিন পপ-আপ মোডাল */}
+      <AnimatePresence>
+        {showLockModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-2xl text-center"
+            >
+              <div className="w-14 h-14 bg-blue-500/10 text-blue-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 border dark:border-slate-800 shadow-inner">
+                <KeyRound size={26} className="animate-pulse" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">মডারেটর সিকিউরিটি গেট</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-[240px] mx-auto">অ্যাডমিন প্যানেলে প্রবেশ করতে আপনার সিক্রেট কোডটি প্রদান করুন।</p>
+              
+              <form onSubmit={handleAdminAccessSubmit} className="mt-5 space-y-3 text-left">
+                <div className="relative flex items-center">
+                  <input 
+                    type={showPasswordText ? "text" : "password"} 
+                    required
+                    placeholder="সিক্রেট পাসওয়ার্ড দিন..." 
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full p-3.5 pr-11 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                  {/* পাসওয়ার্ড শো/হাইড বাটন */}
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPasswordText(!showPasswordText)}
+                    className="absolute right-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    {showPasswordText ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowLockModal(false)}
+                    className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl text-xs uppercase"
+                  >
+                    বন্ধ করুন
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-cyan-500 dark:to-blue-600 text-white dark:text-slate-950 font-black py-3 rounded-xl text-xs uppercase shadow-md shadow-blue-500/10"
+                  >
+                    আনলক করুন
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <footer className="mt-auto border-t dark:border-slate-900 bg-white dark:bg-slate-900/40 py-6 text-center text-xs text-slate-400 font-medium transition-colors">
         <div className="flex items-center justify-center gap-1">
