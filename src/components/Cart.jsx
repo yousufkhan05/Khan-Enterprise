@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Smartphone, CheckCircle, ArrowLeft, Truck, User, MapPin, MessageSquare, ShoppingBag } from 'lucide-react';
 
-export default function Cart({ cart, removeFromCart, clearCart, setPage, products, setProducts }) {
+export default function Cart({ cart, removeFromCart, clearCart, setPage, products, setProducts, orders, setOrders }) {
   // কাস্টমার ইনফো স্টেট
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -33,32 +33,30 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
       return alert('ডিজিটাল পেমেন্টের জন্য অনুগ্রহ করে প্রেরক নম্বর এবং TrxID প্রদান করুন।');
     }
 
-    // 🚀 জাদুকরী স্টক কমানোর লজিক (Inventory Update)
+    // 🚀 ১. লাইভ স্টক কমানোর লজিক (Inventory Update)
     if (setProducts && products) {
       const updatedProducts = products.map(product => {
-        // কার্টে এই প্রোডাক্টটি কয়বার আছে তা গণনা করা
         const itemsInCart = cart.filter(item => item.id === product.id).length;
         if (itemsInCart > 0) {
           const currentStock = product.stock !== undefined ? product.stock : 100;
-          // স্টক থেকে বিয়োগ করা (০ এর নিচে যাবে না)
           const newStock = Math.max(0, currentStock - itemsInCart);
           return { ...product, stock: newStock };
         }
         return product;
       });
       
-      // গ্লোবাল স্টেট এবং লোকাল স্টোরেজ আপডেট
       setProducts(updatedProducts);
       localStorage.setItem('khan_enterprise_products', JSON.stringify(updatedProducts));
     }
 
-    // অর্ডার ডাটা অবজেক্ট (এটি ব্যাকএন্ড বা ফায়ারবেসে পাঠানোর জন্য রেডি)
-    const orderData = {
+    // 📦 ২. অর্ডার ডাটা অবজেক্ট তৈরি
+    const newOrder = {
       orderId: Date.now(),
-      items: cart,
+      items: cart.map(item => ({ id: item.id, name: item.name, price: item.price })), // প্রোডাক্টের সংক্ষিপ্ত ডাটা
       subTotal: totalPrice,
       deliveryCharge,
       grandTotal: finalAmount,
+      status: 'Pending', // ডিফল্ট স্ট্যাটাস পেন্ডিং থাকবে
       customer: {
         name: customerName,
         phone: phoneNumber,
@@ -74,7 +72,14 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
       date: new Date().toLocaleDateString()
     };
 
-    console.log("Khan Enterprise - নতুন অর্ডার কনফার্ম হয়েছে:", orderData);
+    // 🎯 ৩. মডারেটর ড্যাশবোর্ডের জন্য গ্লোবাল অর্ডারে পুশ করা
+    if (setOrders && orders) {
+      const updatedOrders = [newOrder, ...orders];
+      setOrders(updatedOrders);
+      localStorage.setItem('khan_enterprise_orders', JSON.stringify(updatedOrders));
+    }
+
+    console.log("Khan Enterprise - নতুন অর্ডার মডারেটর ড্যাশবোর্ডে পাঠানো হয়েছে:", newOrder);
     
     setIsOrdered(true);
     clearCart(); // অর্ডার শেষে কার্ট খালি করা
@@ -91,9 +96,9 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
         <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-5">
           <CheckCircle size={48} className="animate-bounce" />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">অর্ডারটি সফল হয়েছে! 🎉</h2>
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">অর্ডারটি সফল হয়েছে! 🎉</h2>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 leading-relaxed">
-          আপনার অর্ডারটি <span className="font-bold text-blue-600 dark:text-cyan-400">Khan Enterprise</span> স্টোরে নথিভুক্ত করা হয়েছে। আমাদের প্রতিনিধি কিছুক্ষণের মধ্যে কল করে অর্ডারটি কনফার্ম করবেন।
+          আপনার অর্ডারটি <span className="font-bold text-blue-600 dark:text-cyan-400">Khan Enterprise</span> স্টোরে নথিভুক্ত করা হয়েছে। আমাদের প্রতিনিধি কিছুক্ষণের মধ্যে কল করে অর্ডারটি কনফার্ম করবেন।
         </p>
         
         <button 
@@ -109,11 +114,11 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
   return (
     <div className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24 md:pb-12">
       
-      {/* বাম পাশ: কার্ট রিভিউ এলিমেন্টস (৭ কলাম) */}
+      {/* বাম পাশ: কার্ট রিভিউ এলিমেন্টস */}
       <div className="lg:col-span-7">
         <button 
           onClick={() => setPage('shop')} 
-          className="flex items-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400 mb-5 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors uppercase"
+          className="flex items-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400 mb-5 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors uppercase cursor-pointer"
         >
           <ArrowLeft size={14} /> শপ কালেকশনে ফিরুন
         </button>
@@ -142,7 +147,7 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
                 </div>
                 <button 
                   onClick={() => removeFromCart(index)} 
-                  className="text-rose-500 p-2.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all"
+                  className="text-rose-500 p-2.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all cursor-pointer"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -152,7 +157,7 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
         )}
       </div>
 
-      {/* ডান পাশ: দারাজ স্টাইল প্রফেশনাল মাল্টি-স্টেপ চেকআউট ফর্ম (৫ কলাম) */}
+      {/* ডান পাশ: দারাজ স্টাইল প্রফেশনাল মাল্টি-স্টেপ চেকআউট ফর্ম */}
       {cart.length > 0 && (
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl">
@@ -162,94 +167,40 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
 
             <form onSubmit={handleCheckout} className="space-y-4">
               
-              {/* কাস্টমার নাম */}
               <div>
                 <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1"><User size={12} /> আপনার সম্পূর্ণ নাম</label>
                 <input type="text" required placeholder="যেমন: মো: ইউসুফ খান" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-all" />
               </div>
 
-              {/* মোবাইল ও হোয়াটসঅ্যাপ গ্রিড */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1">📱 সচল মোবাইল নম্বর</label>
                   <input type="tel" required placeholder="01XXXXXXXXX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1"><MessageSquare size={12} /> হোয়াটসঅ্যাপ নম্বর</label>
+                  <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1"><MessageSquare size={12} /> হোয়াটসঅ্যাপ নম্বর</label>
                   <input type="tel" placeholder="01XXXXXXXXX (ঐচ্ছিক)" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none" />
                 </div>
               </div>
 
-              {/* জেলা নির্বাচন ড্রপডাউন (দারাজ স্টাইল ডেলিভারি চার্জ মেকানিজম) */}
               <div>
                 <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1"><MapPin size={12} /> জেলা নির্বাচন করুন</label>
                 <select required value={district} onChange={(e) => setDistrict(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="">-- জেলা সিলেক্ট করুন --</option>
-                  <option value="Dhaka">ঢাকা (ঢাকার ভিতরে ডেলিভারি ৬০৳)</option>
-                  <option value="Outside">ঢাকার বাইরে (অন্যান্য জেলা ১২০৳)</option>
+                  <option value="Dhaka">ঢাকা (ঢাকার ভিতরে ডেলিভারি 80৳)</option>
+                  <option value="Outside">ঢাকার বাইরে (অন্যান্য জেলা 120৳)</option>
                 </select>
               </div>
 
-              {/* ফুল অ্যাড্রেস */}
               <div>
                 <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">সম্পূর্ণ ঠিকানা (গ্রাম, থানা, রোড, বাসা নং)</label>
-                <textarea required placeholder="আপনার পণ্যটি যে ঠিকানায় ডেলিভারি করা হবে তা বিস্তারিত লিখুন..." value={fullAddress} onChange={(e) => setFullAddress(e.target.value)} className="w-full p-3 h-16 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none resize-none" />
+                <textarea required placeholder="আপনার পণ্যটি যে ঠিকানায় ডেলিভারি করা হবে তা বিস্তারিত লিখুন..." value={fullAddress} onChange={(e) => setFullAddress(e.target.value)} className="w-full p-3 h-16 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none resize-none" />
               </div>
 
-              {/* ৩. প্রফেশনাল ট্রিপল পেমেন্ট মেথড টগল */}
               <div className="pt-2">
                 <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">পেমেন্ট মেথড সিলেক্ট করুন</label>
                 <div className="grid grid-cols-3 gap-2">
-                  <button type="button" onClick={() => setPaymentMethod('cod')} className={`p-2.5 rounded-xl border text-[11px] sm:text-xs font-black flex flex-col items-center justify-center gap-1 transition-all ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-500/10 text-blue-600 dark:text-cyan-400' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
-                    <Truck size={14} /> COD (হাতে পেয়ে)
+                  <button type="button" onClick={() => setPaymentMethod('cod')} className={`p-2.5 rounded-xl border text-[11px] sm:text-xs font-black flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-500/10 text-blue-600 dark:text-cyan-400' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                    <Truck size={14} /> Cash on Delivery
                   </button>
-                  <button type="button" onClick={() => setPaymentMethod('bkash')} className={`p-2.5 rounded-xl border text-[11px] sm:text-xs font-black flex flex-col items-center justify-center gap-1 transition-all ${paymentMethod === 'bkash' ? 'border-pink-500 bg-pink-500/10 text-pink-600' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
-                    <Smartphone size={14} /> bKash (বিকাশ)
-                  </button>
-                  <button type="button" onClick={() => setPaymentMethod('nagad')} className={`p-2.5 rounded-xl border text-[11px] sm:text-xs font-black flex flex-col items-center justify-center gap-1 transition-all ${paymentMethod === 'nagad' ? 'border-orange-500 bg-orange-500/10 text-orange-600' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
-                    <Smartphone size={14} /> Nagad (নগদ)
-                  </button>
-                </div>
-              </div>
-
-              {/* ডিজিটাল পেমেন্ট ইনস্ট্রাকশন ও ইনপুট বক্স */}
-              {paymentMethod !== 'cod' && (
-                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border dark:border-slate-800">
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    👉 আমাদের পার্সোনাল নাম্বারে (<strong>01771183608</strong>) সর্বমোট <strong>৳{finalAmount}</strong> Send Money করে নিচের তথ্য দিন।
-                  </p>
-                  <div>
-                    <input type="tel" required placeholder="বিকাশ/নগদ নম্বর (যেটি থেকে পাঠিয়েছেন)" value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} className="w-full p-2.5 text-xs rounded-lg border dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none" />
-                  </div>
-                  <div>
-                    <input type="text" required placeholder="Transaction ID (TxID)" value={trxId} onChange={(e) => setTrxId(e.target.value)} className="w-full p-2.5 text-xs rounded-lg border dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none" />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ফাইনাল প্রাইস সামারি ব্রেকডাউন */}
-              <div className="border-t pt-4 border-slate-100 dark:border-slate-800/80 text-xs space-y-2 text-slate-600 dark:text-slate-400 font-medium">
-                <div className="flex justify-between"><span>পণ্যের মূল্য:</span><span>৳ {totalPrice}</span></div>
-                <div className="flex justify-between"><span>ডেলিভারি চার্জ:</span><span>৳ {deliveryCharge}</span></div>
-                <div className="flex justify-between font-black text-sm text-slate-900 dark:text-white border-t pt-2 dark:border-slate-800/40">
-                  <span>সর্বমোট প্রদেয় বিল:</span>
-                  <span className="text-base font-black text-blue-600 dark:text-cyan-400">৳ {finalAmount}</span>
-                </div>
-              </div>
-
-              {/* কনফর্ম বাটন */}
-              <motion.button 
-                whileHover={{ scale: 1.01 }} 
-                whileTap={{ scale: 0.99 }} 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-xl text-xs sm:text-sm shadow-md uppercase tracking-wider mt-2 cursor-pointer"
-              >
-                অর্ডার কনফার্ম করুন
-              </motion.button>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                  <button type="button" onClick={() => setPaymentMethod('bkash')} className={`p-2
