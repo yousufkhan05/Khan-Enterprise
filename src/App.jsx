@@ -171,7 +171,7 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-500 font-sans ${
       darkMode ? 'bg-[rgba(7,11,23,1)] text-slate-100' : 'bg-slate-50 text-slate-900'
-    } relative overflow-x-hidden`}>
+    } relative overflow-x-hidden pt-[140px] sm:pt-[80px]`}> {/* Navbar এর জায়গার জন্য প্যাডিং টপ ফিক্স করা হয়েছে */}
       
       {darkMode && (
         <>
@@ -180,11 +180,11 @@ export default function App() {
         </>
       )}
       
-      {/* 🌟 Fixed & Structured Navbar Wrapper */}
-      <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/60 shadow-sm">
+      {/* 🌟 Fixed Navbar (উচ্চ z-index এবং সলিড ব্যাকগ্রাউন্ড দিয়ে স্ক্রল ফিক্স করা হয়েছে) */}
+      <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
           
-          {/* Logo Brand */}
+          {/* Logo */}
           <div onClick={() => setPage('shop')} className="flex items-center gap-2.5 cursor-pointer select-none">
             <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md">
               <ShieldCheck size={20} />
@@ -196,7 +196,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Navigation Controls Component Container */}
+          {/* Navigation Controls */}
           <div className="flex items-center justify-center gap-2 flex-wrap sm:flex-nowrap">
             <button 
               onClick={() => setPage('shop')} 
@@ -242,11 +242,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* 🌀 Dynamic Container Flow */}
-      <main className="flex-grow max-w-6xl mx-auto px-4 py-8 z-10 w-full">
+      {/* 🌀 Main Body Dynamic Flow */}
+      <main className="flex-grow max-w-6xl mx-auto px-4 py-4 z-10 w-full">
         <AnimatePresence mode="wait">
           
-          {/* Shop View Dashboard */}
           {page === 'shop' && (
             <motion.div key="shop-panel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
               <div className="relative h-40 sm:h-52 rounded-3xl overflow-hidden shadow-md border dark:border-slate-800">
@@ -258,7 +257,6 @@ export default function App() {
                 </AnimatePresence>
               </div>
 
-              {/* Categorization & Layout Trigger */}
               <div className="space-y-4">
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                   {['All', 'Smartwatch', 'Headphone'].map((cat) => (
@@ -273,7 +271,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* Admin Panel Secured Core */}
           {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin-panel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
               <div className="mb-4">
@@ -288,7 +285,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* Cart Framework Controller */}
           {page === 'cart' && (
             <motion.div key="cart-panel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} setPage={setPage} products={products} setProducts={setProducts} orders={orders} setOrders={setOrders} />
@@ -298,22 +294,24 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Security Admin Gate Access Modal Popup */}
+      {/* 🔐 Security Access Modal (টেক্সট কালার কুচকুচে কালো/সাদা জোরপূর্বক ফিক্স করা হয়েছে) */}
       <AnimatePresence>
         {showLockModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-sm bg-white dark:bg-slate-900 border p-6 rounded-2xl shadow-xl text-center border-slate-200 dark:border-slate-800">
               <div className="w-12 h-14 bg-blue-500/10 text-blue-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3"><KeyRound size={22} /></div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white">Moderator Security Access</h3>
               <p className="text-[11px] text-slate-500 mt-1">Enter code to unlock dashboard modules.</p>
+              
               <form onSubmit={handleAdminAccessSubmit} className="mt-4 space-y-3">
                 <input 
-                  type={showPasswordText ? "text" : "password"} 
+                  type="text" // রেন্ডারিং ভিজিবিলিটি ঠিক রাখতে টেক্সট মোড ব্যবহার করা হলো
+                  style={{ WebkitTextSecurity: 'disc' }} // প্রফেশনাল ডট ডট সিকিউরিটি মাস্কিং ইফেক্ট
                   required 
                   placeholder="Enter Secret Password..." 
                   value={adminPassword} 
                   onChange={(e) => setAdminPassword(e.target.value)} 
-                  className="w-full p-3 text-xs rounded-xl border bg-transparent text-center font-mono dark:border-slate-800 focus:outline-none focus:border-blue-500" 
+                  className="w-full p-3 text-xs rounded-xl border bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white border-slate-300 dark:border-slate-800 text-center font-mono focus:outline-none focus:border-blue-500" 
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => setShowLockModal(false)} className="bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Close</button>
