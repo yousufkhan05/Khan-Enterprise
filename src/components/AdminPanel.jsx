@@ -10,7 +10,10 @@ export default function AdminPanel({
   orders, 
   adminTab, 
   updateOrderStatus, 
-  deleteOrder 
+  deleteOrder,
+  products,
+  deleteProduct,
+  setEditingProduct
 }) {
   const [name, setName] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
@@ -107,14 +110,14 @@ export default function AdminPanel({
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Verify customer details and update delivery status after shipping.</p>
           </div>
 
-          {orders.length === 0 ? (
+          {orders && orders.length === 0 ? (
             <div className="text-center py-12 bg-white dark:bg-slate-900/40 rounded-3xl border border-dashed dark:border-slate-800 text-slate-400">
               <ClipboardList size={40} className="mx-auto opacity-30 mb-2" />
               <p className="text-xs font-medium">No new orders available yet!</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
+              {orders && orders.map((order) => (
                 <motion.div key={order.orderId} layout className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/80 p-5 shadow-md space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b dark:border-slate-800/60 pb-3">
                     <div className="text-xs">
@@ -147,7 +150,7 @@ export default function AdminPanel({
                   <div className="bg-slate-50/40 dark:bg-slate-950/20 p-3 rounded-2xl border dark:border-slate-800/20 text-xs">
                     <h4 className="font-black mb-2 text-[11px] text-slate-400 uppercase tracking-wide">🛒 Ordered Items:</h4>
                     <div className="space-y-1">
-                      {order.items.map((item, idx) => (
+                      {order.items && order.items.map((item, idx) => (
                         <div key={idx} className="flex justify-between items-center py-1 border-b border-dashed dark:border-slate-800/40 last:border-none">
                           <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
                           <span className="font-black text-blue-600 dark:text-cyan-400">৳{item.price}</span>
