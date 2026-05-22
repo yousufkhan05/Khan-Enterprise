@@ -242,7 +242,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* 🌀 Main Display Window */}
+      {/* 🌀 Main Layout Container */}
       <main className="max-w-6xl mx-auto px-4 pt-24 pb-6 z-10 relative">
         <AnimatePresence mode="wait">
           
@@ -287,11 +287,10 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* 2. ADMIN PANEL (সম্পূর্ণ এরর ফিক্সড প্রপ্স কনফিগারেশন) */}
+          {/* 2. ADMIN PANEL (🎯 কন্ডিশনাল রেন্ডারিংয়ের সবকটি ব্লকে প্রপ্স পুরোপুরি লক করা হয়েছে) */}
           {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
               
-              {/* ৪টি ডাইনামিক সাব-ট্যাব বাটন কন্ট্রোল */}
               <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <button 
                   onClick={() => { setAdminTab('add'); setEditingProduct(null); }}
@@ -338,13 +337,21 @@ export default function App() {
                 </button>
               </div>
 
-              {/* মেইন কনটেন্ট এরিয়া */}
               <div className="w-full">
                 <button onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} className="mb-4 px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all block cursor-pointer">Logout (Lock Panel)</button>
                 
-                {/* 🎯 এখানে রেন্ডারিং কন্ডিশন ফিক্সড করা হয়েছে যাতে সব প্রপ্স নিখুঁতভাবে পাস হয় */}
+                {/* 🛠️ ফিক্সড গেটওয়ে: প্রতিটি কন্ডিশনে AdminPanel-এর সব প্রপ্স পাঠানো হয়েছে */}
                 {adminTab === 'add' || editingProduct ? (
-                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
+                  <AdminPanel 
+                    addProduct={addProduct} 
+                    setPage={setPage} 
+                    editingProduct={editingProduct} 
+                    updateProduct={updateProduct} 
+                    orders={orders} 
+                    adminTab={adminTab} 
+                    updateOrderStatus={updateOrderStatus} 
+                    deleteOrder={deleteOrder} 
+                  />
                 ) : adminTab === 'manage' ? (
                   <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 p-4 sm:p-6 shadow-xl">
                     <h3 className="text-lg font-black mb-4 flex items-center gap-1.5"><Settings size={18} /> Inventory Stock Controller</h3>
@@ -367,8 +374,16 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  /* অ্যানালিটিক্স এবং ইনকামিং অর্ডার ট্যাব রেন্ডারিং গেট */
-                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
+                  <AdminPanel 
+                    addProduct={addProduct} 
+                    setPage={setPage} 
+                    editingProduct={editingProduct} 
+                    updateProduct={updateProduct} 
+                    orders={orders} 
+                    adminTab={adminTab} 
+                    updateOrderStatus={updateOrderStatus} 
+                    deleteOrder={deleteOrder} 
+                  />
                 )}
               </div>
             </motion.div>
