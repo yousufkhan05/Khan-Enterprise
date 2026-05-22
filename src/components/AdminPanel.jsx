@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { PlusCircle, Image, DollarSign, Type, Package, Trash2, Plus, ArrowLeft, Edit3, ClipboardList, Calendar, Phone, MapPin, CreditCard, BarChart3, TrendingUp, ShoppingBag, CheckCircle } from 'lucide-react';
-// recharts লাইব্রেরি থেকে প্রয়োজনীয় গ্রাফ কম্পোনেন্ট ইমপোর্ট করা
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PlusCircle, Image, DollarSign, Type, Package, Trash2, Plus, ArrowLeft, Edit3, ClipboardList, BarChart3, TrendingUp, ShoppingBag, CheckCircle, Calendar, Phone, MapPin, CreditCard } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function AdminPanel({ 
   addProduct, 
@@ -41,49 +40,66 @@ export default function AdminPanel({
     }
   }, [editingProduct]);
 
-  // 📊 অ্যানালিটিক্স ডাটা প্রসেসিং মেকানিজম (লাখ টাকার ওয়েবসাইটের মূল মগজ)
+  // 🎯 ছবি যোগ এবং রিমুভ করার ফাংশনসমূহ (যা মিসিং হওয়ার কারণে এরর আসছিল)
+  const handleAddImageField = () => {
+    setImages([...images, '']);
+  };
+  
+  const handleImageChange = (index, value) => {
+    const updatedImages = [...images];
+    updatedImages[index] = value;
+    setImages(updatedImages);
+  };
+
+  const handleRemoveImageField = (index) => {
+    if (images.length === 1) return;
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  // 📊 অ্যানালিটিক্স ডাটা প্রসেসিং মেকানিজম
   const getAnalyticsData = () => {
-    // ১. সেলস রেভেনিউ চার্ট ডাটা
     const salesMap = {};
-    orders.forEach(order => {
-      const date = order.date;
-      salesMap[date] = (salesMap[date] || 0) + Number(order.grandTotal);
+    const safeOrders = orders || [];
+    
+    safeOrders.forEach(order => {
+      const date = order.date || new Date().toLocaleDateString();
+      salesMap[date] = (salesMap[date] || 0) + Number(order.grandTotal || 0);
     });
+    
     const revenueData = Object.keys(salesMap).map(date => ({ date, Revenue: salesMap[date] })).reverse();
 
-    // ২. অর্ডার স্ট্যাটাস ব্রেকডাউন ডাটা
     let pendingCount = 0;
     let completedCount = 0;
-    orders.forEach(order => {
+    safeOrders.forEach(order => {
       if (order.status === 'Completed') completedCount++;
       else pendingCount++;
     });
+    
     const statusData = [
-      { name: 'Pending Orders', value: pendingCount || 1 }, // গ্রাফ খালি না রাখার ফলব্যাক
-      { name: 'Completed Deliveries', value: completedCount }
+      { name: 'Pending Orders', value: pendingCount || 0 },
+      { name: 'Completed Deliveries', value: completedCount || 0 }
     ];
 
-    // ৩. ক্যাটাগরি সেলস পারফরম্যান্স
     let smartwatchSales = 0;
     let headphoneSales = 0;
-    orders.forEach(order => {
-      order.items.forEach(item => {
-        if (item.name.toLowerCase().includes('watch')) smartwatchSales += Number(item.price);
-        else headphoneSales += Number(item.price);
+    safeOrders.forEach(order => {
+      (order.items || []).forEach(item => {
+        if (item.name && item.name.toLowerCase().includes('watch')) smartwatchSales += Number(item.price || 0);
+        else headphoneSales += Number(item.price || 0);
       });
     });
+    
     const categoryData = [
       { name: 'Smartwatches', Sales: smartwatchSales },
       { name: 'Headphones', Sales: headphoneSales }
     ];
 
-    // টোটাল বিজনেস কাউন্টার হিসাব
-    const totalBusinessRevenue = orders.reduce((sum, order) => sum + Number(order.grandTotal), 0);
+    const totalBusinessRevenue = safeOrders.reduce((sum, order) => sum + Number(order.grandTotal || 0), 0);
 
-    return { revenueData, statusData, categoryData, totalBusinessRevenue };
+    return { revenueData, statusData, categoryData, totalBusinessRevenue, pendingCount, completedCount };
   };
 
-  const { revenueData, statusData, categoryData, totalBusinessRevenue } = getAnalyticsData();
+  const { revenueData, statusData, categoryData, totalBusinessRevenue, pendingCount, completedCount } = getAnalyticsData();
   const PIE_COLORS = ['#f59e0b', '#10b981'];
 
   const handleSubmit = (e) => {
@@ -109,14 +125,13 @@ export default function AdminPanel({
     }
   };
 
+  const safeOrdersList = orders || [];
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-2">
-      <button onClick={() => setPage && setPage('shop')} className="mb-4 flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors uppercase cursor-pointer"><ArrowLeft size={14} /> Back to Shop</button>
-
-      {/* ==================== 📊 রিয়েল-টাইম অ্যানালিটিক্স ড্যাশবোর্ড ট্যাব ভিউ ==================== */}
-      {adminTab === 'analytics' ? (
+      {/* ==================== 📊 ১. অ্যানালিটিক্স ড্যাশবোর্ড ট্যাব ভিউ ==================== */}
+      {adminTab === 'analytics' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          {/* বিজনেস ম্যাট্রিক্স কাউন্টার কার্ডস */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-md flex items-center gap-4">
               <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-cyan-400 rounded-2xl"><TrendingUp size={24} /></div>
@@ -124,17 +139,15 @@ export default function AdminPanel({
             </div>
             <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-md flex items-center gap-4">
               <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl"><ShoppingBag size={24} /></div>
-              <div><p className="text-[10px] uppercase font-black text-slate-400">Total Orders</p><h3 className="text-xl font-black text-slate-800 dark:text-white">{orders.length} Units</h3></div>
+              <div><p className="text-[10px] uppercase font-black text-slate-400">Total Orders</p><h3 className="text-xl font-black text-slate-800 dark:text-white">{safeOrdersList.length} Units</h3></div>
             </div>
             <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-md flex items-center gap-4">
               <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl"><CheckCircle size={24} /></div>
-              <div><p className="text-[10px] uppercase font-black text-slate-400">Success Rate</p><h3 className="text-xl font-black text-slate-800 dark:text-white">{orders.length > 0 ? Math.round((orders.filter(o=>o.status==='Completed').length / orders.length)*100) : 0}%</h3></div>
+              <div><p className="text-[10px] uppercase font-black text-slate-400">Success Rate</p><h3 className="text-xl font-black text-slate-800 dark:text-white">{safeOrdersList.length > 0 ? Math.round((safeOrdersList.filter(o=>o.status==='Completed').length / safeOrdersList.length)*100) : 0}%</h3></div>
             </div>
           </div>
 
-          {/* গ্রাফ চার্ট গ্রিড লেআউট */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* ১. ডেইলি সেলস রেভেনিউ লাইন চার্ট */}
             <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border dark:border-slate-800 shadow-xl space-y-4">
               <h4 className="text-xs font-black uppercase text-slate-400 flex items-center gap-1.5"><BarChart3 size={14} className="text-blue-500" /> Daily Revenue Timeline</h4>
               <div className="h-64 w-full text-[10px]">
@@ -150,9 +163,8 @@ export default function AdminPanel({
               </div>
             </div>
 
-            {/* ২. টপ ক্যাটাগরি বার চার্ট */}
             <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border dark:border-slate-800 shadow-xl space-y-4">
-              <h4 className="text-xs font-black uppercase text-slate-400 flex items-center gap-1.5"><BarChart3 size={14} className="text-cyan-400" /> Category Performance Comparison</h4>
+              <h4 className="text-xs font-black uppercase text-slate-400 flex items-center gap-1.5"><BarChart3 size={14} className="text-cyan-400" /> Category Performance</h4>
               <div className="h-64 w-full text-[10px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={categoryData}>
@@ -166,7 +178,6 @@ export default function AdminPanel({
               </div>
             </div>
 
-            {/* ৩. অর্ডার স্ট্যাটাস রেশিও পাই চার্ট */}
             <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border dark:border-slate-800 shadow-xl space-y-4 lg:col-span-2">
               <h4 className="text-xs font-black uppercase text-slate-400 flex items-center gap-1.5"><BarChart3 size={14} className="text-amber-500" /> Fulfillment Operational Ratio</h4>
               <div className="h-56 w-full flex flex-col sm:flex-row items-center justify-around text-xs">
@@ -182,26 +193,31 @@ export default function AdminPanel({
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="space-y-2 text-xs font-bold w-full sm:w-1/2 px-4">
+                <div className="space-y-2 text-xs font-bold w-full sm:w-1/2 px-4 text-slate-700 dark:text-slate-300">
                   <div className="flex items-center gap-2 text-amber-500"><div className="w-3 h-3 bg-amber-500 rounded-full"/> Pending Orders Processing: {pendingCount} units</div>
-                  <div className="flex items-center gap-2 text-emerald-500"><div className="w-3 h-3 bg-emerald-500 rounded-full"/> Completed Product Deliveries: {completedCount} units</div>
+                  <div className="flex items-center gap-2 text-emerald-500"><div className="w-3 h-3 bg-emerald-500 rounded-full"/> Completed Deliveries: {completedCount} units</div>
                 </div>
               </div>
             </div>
           </div>
         </motion.div>
-      ) : adminTab === 'orders' ? (
-        /* ==================== আসা অর্ডারের লিস্ট ভিউ ==================== */
+      )}
+
+      {/* ==================== 🛒 ২. অর্ডার ট্র্যাকিং লিস্ট ভিউ ==================== */}
+      {adminTab === 'orders' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          {orders.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl">
+            <h3 className="text-sm font-black flex items-center gap-2 text-slate-900 dark:text-white"><ClipboardList className="text-emerald-500" /> Incoming Orders Live Dashboard</h3>
+          </div>
+          {safeOrdersList.length === 0 ? (
             <div className="text-center py-12 bg-white dark:bg-slate-900/40 rounded-3xl border border-dashed dark:border-slate-800 text-slate-400">
               <ClipboardList size={40} className="mx-auto opacity-30 mb-2" />
               <p className="text-xs font-medium">No new orders available yet!</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
-                <motion.div key={order.orderId} layout className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/80 p-5 shadow-md space-y-4">
+              {safeOrdersList.map((order) => (
+                <motion.div key={order.orderId} layout className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/80 p-5 shadow-md space-y-4 text-slate-800 dark:text-slate-200">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b dark:border-slate-800/60 pb-3">
                     <div className="text-xs">
                       <span className="text-slate-400">Order ID:</span> <span className="font-mono font-bold text-blue-600 dark:text-cyan-400">#{order.orderId}</span>
@@ -210,29 +226,27 @@ export default function AdminPanel({
                     </div>
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                       order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse'
-                    }`}>
-                      {order.status}
-                    </span>
+                    }`}>{order.status}</span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     <div className="space-y-1.5 bg-slate-50/60 dark:bg-slate-950/40 p-3 rounded-2xl border dark:border-slate-800/40">
                       <h4 className="font-black text-[11px] uppercase tracking-wide text-blue-600 dark:text-cyan-400 flex items-center gap-1 mb-1">👤 Customer Profile</h4>
-                      <div><span className="text-slate-400">Name:</span> <span className="font-bold">{order.customer.name}</span></div>
-                      <div className="flex items-center gap-1.5"><Phone size={11} className="text-slate-400" /><span className="text-slate-400">Phone:</span> <a href={`tel:${order.customer.phone}`} className="font-bold text-blue-500 hover:underline">{order.customer.phone}</a></div>
-                      <div><span className="text-slate-400">WhatsApp:</span> <span className="font-bold">{order.customer.whatsapp}</span></div>
+                      <div><span className="text-slate-400">Name:</span> <span className="font-bold">{order.customer?.name}</span></div>
+                      <div className="flex items-center gap-1.5"><Phone size={11} className="text-slate-400" /><span className="text-slate-400">Phone:</span> <a href={`tel:${order.customer?.phone}`} className="font-bold text-blue-500 hover:underline">{order.customer?.phone}</a></div>
+                      <div><span className="text-slate-400">WhatsApp:</span> <span className="font-bold">{order.customer?.whatsapp}</span></div>
                     </div>
                     <div className="space-y-1.5 bg-slate-50/60 dark:bg-slate-950/40 p-3 rounded-2xl border dark:border-slate-800/40">
                       <h4 className="font-black text-[11px] uppercase tracking-wide text-blue-600 dark:text-cyan-400 flex items-center gap-1 mb-1"><MapPin size={11} /> Shipping Address</h4>
-                      <div><span className="text-slate-400">Region:</span> <span className="font-bold">{order.customer.district === 'Dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'}</span></div>
-                      <div><span className="text-slate-400">Address:</span> <span className="font-medium leading-relaxed">{order.customer.address}</span></div>
+                      <div><span className="text-slate-400">Region:</span> <span className="font-bold">{order.customer?.district === 'Dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'}</span></div>
+                      <div><span className="text-slate-400">Address:</span> <span className="font-medium leading-relaxed">{order.customer?.address}</span></div>
                     </div>
                   </div>
 
                   <div className="bg-slate-50/40 dark:bg-slate-950/20 p-3 rounded-2xl border dark:border-slate-800/20 text-xs">
                     <h4 className="font-black mb-2 text-[11px] text-slate-400 uppercase tracking-wide">🛒 Ordered Items:</h4>
                     <div className="space-y-1">
-                      {order.items.map((item, idx) => (
+                      {(order.items || []).map((item, idx) => (
                         <div key={idx} className="flex justify-between items-center py-2 px-1 border-b border-dashed dark:border-slate-800/40 last:border-none">
                           <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
                           <span className="font-black text-blue-600 dark:text-cyan-400">৳{item.price}</span>
@@ -243,27 +257,29 @@ export default function AdminPanel({
 
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border dark:border-slate-800 text-xs">
                     <div>
-                      <span className="font-bold flex items-center gap-1 text-slate-500"><CreditCard size={13} /> Payment Method: <span className="uppercase text-slate-800 dark:text-slate-200 font-black">{order.payment.method}</span></span>
-                      {order.payment.method !== 'cod' && (
-                        <div className="text-[11px] text-slate-400 font-medium">Number: {order.payment.sender} | TxID: <span className="text-emerald-500 font-mono font-bold">{order.payment.trxId}</span></div>
+                      <span className="font-bold flex items-center gap-1 text-slate-500"><CreditCard size={13} /> Payment Method: <span className="uppercase text-slate-800 dark:text-slate-200 font-black">{order.payment?.method}</span></span>
+                      {order.payment?.method !== 'cod' && (
+                        <div className="text-[11px] text-slate-400 font-medium mt-1">Number: {order.payment?.sender} | TxID: <span className="text-emerald-500 font-mono font-bold">{order.payment?.trxId}</span></div>
                       )}
                     </div>
                     <div className="text-right w-full sm:w-auto pt-2 sm:pt-0"><span className="text-slate-400 mr-1">Grand Total:</span><span className="text-base font-black text-emerald-500">৳{order.grandTotal}</span></div>
                   </div>
 
                   <div className="flex justify-end gap-2 pt-1 border-t dark:border-slate-800/40">
-                    <button onClick={() => updateOrderStatus(order.orderId, order.status)} className={`flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${order.status === 'Completed' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-emerald-500 text-white shadow-sm'}`}>{order.status === 'Completed' ? 'Mark Pending' : 'Mark Completed'}</button>
-                    <button onClick={() => deleteOrder(order.orderId)} className="flex items-center gap-1 text-[11px] bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-50 hover:text-white px-3 py-1.5 rounded-xl font-bold cursor-pointer"><Trash2 size={13} /> Delete Order</button>
+                    <button onClick={() => updateOrderStatus(order.orderId, order.status)} className="flex items-center gap-1 text-[11px] bg-emerald-500 text-white shadow-sm px-3 py-1.5 rounded-xl font-bold cursor-pointer">Update Status</button>
+                    <button onClick={() => deleteOrder(order.orderId)} className="flex items-center gap-1 text-[11px] bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white px-3 py-1.5 rounded-xl font-bold cursor-pointer"><Trash2 size={13} /> Delete Order</button>
                   </div>
                 </motion.div>
               ))}
             </div>
           )}
         </motion.div>
-      ) : (
-        /* ==================== প্রোডাক্ট ইনপুট ফর্ম প্যানেল ==================== */
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800/80 shadow-xl relative">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+      )}
+
+      {/* ==================== 📝 ৩. প্রোডাক্ট আপলোড / এডিট ফর্ম ভিউ ==================== */}
+      {(adminTab === 'add' || adminTab === 'manage') && (
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800/80 shadow-xl relative text-slate-800 dark:text-slate-100">
+          <h2 className="text-xl sm:text-2xl font-black mb-1 flex items-center gap-2">
             {editingProduct ? <><Edit3 className="text-amber-500" /> Product Info Editor</> : <><PlusCircle className="text-blue-600 dark:text-cyan-400" /> Professional Admin Dashboard</>}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">{editingProduct ? `Currently updating configurations for "${editingProduct.name}".` : 'Official manager panel to add custom products, live inventory stocks, and image URLs.'}</p>
