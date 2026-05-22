@@ -5,6 +5,13 @@ import Cart from './components/Cart';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, PlusCircle, LayoutGrid, Sun, Moon, ShieldCheck, Heart, Settings, Edit, Trash2, Lock, KeyRound, Eye, EyeOff, Truck, RefreshCw, Headphones, Layers, ClipboardList } from 'lucide-react';
 
+// ডিফল্ট ৩টি প্রিমিয়াম ব্যানার (যা প্রথমবার লোড হবে)
+const defaultSlides = [
+  { id: 1, title: "The Future of Smart Gadgets Now in Your Hands", subtitle: "Exclusive Collection from Khan Enterprise", badge: "MEGA EID SALE 🔥" },
+  { id: 2, title: "Premium Audio Experience, Zero Noise!", subtitle: "Flat 30% Off on Wireless Headphones Collection", badge: "LIMITED OFFER ⚡" },
+  { id: 3, title: "Smart Lifestyle, Intelligent Tracking", subtitle: "Get Guaranteed Cashback on Genuine Smartwatches", badge: "100% GENUINE PRODUCT 🛡️" }
+];
+
 const initialProducts = [
   {
     id: 1,
@@ -30,12 +37,6 @@ const initialProducts = [
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
     reviews: []
   }
-];
-
-const heroSlides = [
-  { title: "The Future of Smart Gadgets Now in Your Hands", subtitle: "Exclusive Collection from Khan Enterprise", bg: "from-blue-600 to-indigo-800 dark:from-slate-900 dark:to-slate-950", badge: "MEGA EID SALE 🔥" },
-  { title: "Premium Audio Experience, Zero Noise!", subtitle: "Flat 30% Off on Wireless Headphones Collection", bg: "from-purple-600 to-pink-700 dark:from-slate-900 dark:to-slate-900", badge: "LIMITED OFFER ⚡" },
-  { title: "Smart Lifestyle, Intelligent Tracking", subtitle: "Get Guaranteed Cashback on Genuine Smartwatches", bg: "from-cyan-600 to-teal-700 dark:from-slate-950 dark:to-slate-900", badge: "100% GENUINE PRODUCT 🛡️" }
 ];
 
 export default function App() {
@@ -69,13 +70,20 @@ export default function App() {
 
   const [cart, setCart] = useState([]);
 
+  // 🎠 লাইভ ব্যানার স্লিডার স্টেট (অ্যাডমিন প্যানেল থেকে অ্যাড/রিমুভ করার জন্য)
+  const [heroSlides, setHeroSlides] = useState(() => {
+    const savedSlides = localStorage.getItem('khan_enterprise_slides');
+    return savedSlides ? JSON.parse(savedSlides) : defaultSlides;
+  });
+
+  // স্লাইডার অটো-প্লে মেকানিজম (ব্যানার পরিবর্তন হবে যদি ব্যানার থাকে)
   useEffect(() => {
-    if (page !== 'shop') return;
+    if (page !== 'shop' || heroSlides.length === 0) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [page]);
+  }, [page, heroSlides]);
 
   useEffect(() => {
     if (darkMode) {
@@ -89,6 +97,11 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('khan_enterprise_orders', JSON.stringify(orders));
   }, [orders]);
+
+  // ব্যানার ডাটা লোকাল স্টোরেজে সিঙ্ক করা
+  useEffect(() => {
+    localStorage.setItem('khan_enterprise_slides', JSON.stringify(heroSlides));
+  }, [heroSlides]);
 
   const handleAdminAccessSubmit = (e) => {
     e.preventDefault();
@@ -171,7 +184,7 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-500 font-sans ${
       darkMode ? 'bg-[rgba(7,11,23,1)] text-slate-100' : 'bg-slate-50 text-slate-900'
-    } relative overflow-x-hidden pt-[140px] sm:pt-[80px]`}> {/* Navbar এর জায়গার জন্য প্যাডিং টপ ফিক্স করা হয়েছে */}
+    } relative overflow-x-hidden pt-[140px] sm:pt-[80px]`}>
       
       {darkMode && (
         <>
@@ -180,11 +193,9 @@ export default function App() {
         </>
       )}
       
-      {/* 🌟 Fixed Navbar (উচ্চ z-index এবং সলিড ব্যাকগ্রাউন্ড দিয়ে স্ক্রল ফিক্স করা হয়েছে) */}
       <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
           
-          {/* Logo */}
           <div onClick={() => setPage('shop')} className="flex items-center gap-2.5 cursor-pointer select-none">
             <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md">
               <ShieldCheck size={20} />
@@ -196,66 +207,57 @@ export default function App() {
             </div>
           </div>
 
-          {/* Navigation Controls */}
           <div className="flex items-center justify-center gap-2 flex-wrap sm:flex-nowrap">
-            <button 
-              onClick={() => setPage('shop')} 
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                page === 'shop' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <LayoutGrid size={14} /> <span>Shop</span>
-            </button>
-
-            <button 
-              onClick={handleAdminButtonClick} 
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                page === 'admin' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <Lock size={13} className={isAdminLoggedIn ? "text-emerald-400" : ""} /> <span>Admin</span>
-            </button>
-
-            <button 
-              onClick={() => setPage('cart')} 
-              className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 relative transition-all cursor-pointer ${
-                page === 'cart' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'
-              }`}
-            >
-              <ShoppingBag size={14} /> <span>Cart</span>
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black">
-                  {cart.length}
-                </span>
-              )}
-            </button>
-
+            <button onClick={() => setPage('shop')} className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${page === 'shop' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}><LayoutGrid size={14} /> <span>Shop</span></button>
+            <button onClick={handleAdminButtonClick} className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${page === 'admin' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}><Lock size={13} className={isAdminLoggedIn ? "text-emerald-400" : ""} /> <span>Admin</span></button>
+            <button onClick={() => setPage('cart')} className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 relative transition-all cursor-pointer ${page === 'cart' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'}`}><ShoppingBag size={14} /> <span>Cart</span>{cart.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black">{cart.length}</span>}</button>
             <div className="w-[1px] h-5 bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
-
-            <button 
-              onClick={() => setDarkMode(!darkMode)} 
-              className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl transition-all cursor-pointer"
-            >
-              {darkMode ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} />}
-            </button>
+            <button onClick={() => setDarkMode(!darkMode)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl transition-all cursor-pointer">{darkMode ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} />}</button>
           </div>
         </div>
       </header>
 
-      {/* 🌀 Main Body Dynamic Flow */}
       <main className="flex-grow max-w-6xl mx-auto px-4 py-4 z-10 w-full">
         <AnimatePresence mode="wait">
           
           {page === 'shop' && (
             <motion.div key="shop-panel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
-              <div className="relative h-40 sm:h-52 rounded-3xl overflow-hidden shadow-md border dark:border-slate-800">
-                <AnimatePresence mode="wait">
-                  <motion.div key={currentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className={`absolute inset-0 bg-gradient-to-r ${heroSlides[currentSlide].bg} p-6 flex flex-col justify-center text-white`}>
-                    <h2 className="text-base sm:text-xl font-black max-w-md">{heroSlides[currentSlide].title}</h2>
-                    <p className="text-[10px] sm:text-xs opacity-80 mt-1">{heroSlides[currentSlide].subtitle}</p>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+              
+              {/* 🎠 আল্ট্রা-লাক্সারি গ্লাস মরফিজম স্লাইডার (ডার্ক ও লাইট মোডে রি-ডিজাইন করা হয়েছে) */}
+              {heroSlides.length > 0 && (
+                <div className="relative h-44 sm:h-56 rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800/80 bg-gradient-to-tr from-slate-100 to-white dark:from-slate-900 dark:to-slate-950">
+                  {/* ডার্ক মোডে লাক্সারি গ্লো ও ওশেন ব্যাকগ্রাউন্ড ইফেক্ট */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-indigo-600/5 to-transparent dark:from-blue-500/20 dark:via-transparent opacity-80" />
+                  
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={currentSlide} 
+                      initial={{ opacity: 0, x: 20 }} 
+                      animate={{ opacity: 1, x: 0 }} 
+                      exit={{ opacity: 0, x: -20 }} 
+                      transition={{ duration: 0.4 }} 
+                      className="absolute inset-0 p-6 sm:p-10 flex flex-col justify-center z-10 text-left"
+                    >
+                      <span className="w-fit px-2.5 py-0.5 bg-blue-600/10 text-blue-600 dark:bg-blue-400/20 dark:text-cyan-400 text-[9px] sm:text-[10px] font-black rounded-full uppercase tracking-wider mb-2 border border-blue-500/20">
+                        {heroSlides[currentSlide].badge || "SPECIAL OFfER ⚡"}
+                      </span>
+                      <h2 className="text-lg sm:text-2xl font-black max-w-xl leading-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+                        {heroSlides[currentSlide].title}
+                      </h2>
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium max-w-md">
+                        {heroSlides[currentSlide].subtitle}
+                      </p>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* স্লাইড ইন্ডিকেটর ডটস */}
+                  <div className="absolute bottom-3 right-6 flex gap-1 z-20">
+                    {heroSlides.map((_, idx) => (
+                      <button key={idx} onClick={() => setCurrentSlide(idx)} className={`h-1 rounded-full transition-all ${idx === currentSlide ? 'w-4 bg-blue-600 dark:bg-cyan-400' : 'w-1 bg-slate-300 dark:bg-slate-700'}`} />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -273,15 +275,7 @@ export default function App() {
 
           {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin-panel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
-              <div className="mb-4">
-                <button 
-                  onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} 
-                  className="px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
-                >
-                  Logout (Lock Panel)
-                </button>
-              </div>
-              <AdminPanel products={products} setProducts={setProducts} addProduct={addProduct} updateProduct={updateProduct} editingProduct={editingProduct} setPage={setPage} orders={orders} setOrders={setOrders} adminTab={adminTab} setAdminTab={setAdminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} setEditingProduct={setEditingProduct} deleteProduct={deleteProduct} />
+              <AdminPanel products={products} setProducts={setProducts} addProduct={addProduct} updateProduct={updateProduct} editingProduct={editingProduct} setPage={setPage} orders={orders} setOrders={setOrders} adminTab={adminTab} setAdminTab={setAdminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} setEditingProduct={setEditingProduct} deleteProduct={deleteProduct} heroSlides={heroSlides} setHeroSlides={setHeroSlides} />
             </motion.div>
           )}
 
@@ -294,25 +288,14 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* 🔐 Security Access Modal (টেক্সট কালার কুচকুচে কালো/সাদা জোরপূর্বক ফিক্স করা হয়েছে) */}
       <AnimatePresence>
         {showLockModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-sm bg-white dark:bg-slate-900 border p-6 rounded-2xl shadow-xl text-center border-slate-200 dark:border-slate-800">
               <div className="w-12 h-14 bg-blue-500/10 text-blue-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3"><KeyRound size={22} /></div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white">Moderator Security Access</h3>
-              <p className="text-[11px] text-slate-500 mt-1">Enter code to unlock dashboard modules.</p>
-              
               <form onSubmit={handleAdminAccessSubmit} className="mt-4 space-y-3">
-                <input 
-                  type="text" // রেন্ডারিং ভিজিবিলিটি ঠিক রাখতে টেক্সট মোড ব্যবহার করা হলো
-                  style={{ WebkitTextSecurity: 'disc' }} // প্রফেশনাল ডট ডট সিকিউরিটি মাস্কিং ইফেক্ট
-                  required 
-                  placeholder="Enter Secret Password..." 
-                  value={adminPassword} 
-                  onChange={(e) => setAdminPassword(e.target.value)} 
-                  className="w-full p-3 text-xs rounded-xl border bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white border-slate-300 dark:border-slate-800 text-center font-mono focus:outline-none focus:border-blue-500" 
-                />
+                <input type="text" style={{ WebkitTextSecurity: 'disc' }} required placeholder="Enter Secret Password..." value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="w-full p-3 text-xs rounded-xl border bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white border-slate-300 dark:border-slate-800 text-center font-mono focus:outline-none focus:border-blue-500" />
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => setShowLockModal(false)} className="bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Close</button>
                   <button type="submit" className="bg-blue-600 text-white py-2.5 rounded-xl text-xs font-black cursor-pointer shadow-md">Unlock</button>
@@ -323,7 +306,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="w-full border-t border-slate-200/40 dark:border-slate-900 bg-white/50 dark:bg-slate-900/20 py-4.5 text-center text-[10px] text-slate-400 backdrop-blur-md transition-colors mt-auto">
+      <footer className="w-full border-t border-slate-200/40 dark:border-slate-900 bg-white/50 dark:bg-slate-900/20 py-4.5 text-center text-[10px] text-slate-400 backdrop-blur-md mt-auto">
         © {new Date().getFullYear()} Khan Enterprise. All Rights Reserved. Developed by Yousuf
       </footer>
     </div>
