@@ -111,6 +111,8 @@ export default function App() {
       setIsAdminLoggedIn(true);
       setShowLockModal(false);
       setPage('admin');
+      setAdminTab('add'); // অ্যাডমিন লগইন করার পর প্রথম ট্যাব দেখাবে
+      setEditingProduct(null);
       setAdminPassword('');
     } else {
       alert('🚫 Invalid Password! You are not an authorized moderator.');
@@ -195,7 +197,7 @@ export default function App() {
         </>
       )}
       
-      {/* 🌟 আল্ট্রা-স্টিকি হেডার ফিক্সড লেয়ার (fixed top-0 w-full z-[100] প্লাস backdrop-blur-md লক করা হয়েছে) */}
+      {/* 🌟 Navigation Fixed Top Header */}
       <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/60 shadow-md transition-all">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
           
@@ -240,11 +242,11 @@ export default function App() {
         </div>
       </header>
 
-      {/* 🌀 মেইন এরিয়া (হেডার ফিক্সড হওয়ার কারণে এখানে pt-20 প্যাডিং দিয়ে কনটেন্ট নামানো হয়েছে) */}
-      <main className="max-w-6xl mx-auto px-4 pt-20 pb-6 z-10 relative">
+      {/* 🌀 Main Display Area */}
+      <main className="max-w-6xl mx-auto px-4 pt-24 pb-6 z-10 relative">
         <AnimatePresence mode="wait">
           
-          {/* 1. SHOP VIEW */}
+          {/* 1. SHOP FRONT VIEW */}
           {page === 'shop' && (
             <motion.div key="shop" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-8">
               <div className="relative h-48 sm:h-64 rounded-3xl overflow-hidden shadow-xl border border-slate-200/30 dark:border-slate-800/50">
@@ -285,14 +287,18 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* 2. ADMIN MODERATOR PANELS */}
+          {/* 2. ADMIN MODERATOR EXECUTIVE VIEW */}
           {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+              
+              {/* 🛠️ আপডেটেড ৪টি ডাইনামিক সাব-ট্যাব বাটন কন্ট্রোল (হাই কনট্রাস্ট মোবাইল ফিক্সড কালার লেয়ার) */}
               <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <button 
                   onClick={() => { setAdminTab('add'); setEditingProduct(null); }}
                   className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
-                    adminTab === 'add' && !editingProduct ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
+                    adminTab === 'add' && !editingProduct 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
                   }`}
                 >
                   Add New Product
@@ -301,7 +307,9 @@ export default function App() {
                 <button 
                   onClick={() => { setAdminTab('manage'); setEditingProduct(null); }}
                   className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
-                    adminTab === 'manage' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
+                    adminTab === 'manage' 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
                   }`}
                 >
                   Manage Products ({products.length})
@@ -310,15 +318,30 @@ export default function App() {
                 <button 
                   onClick={() => { setAdminTab('orders'); setEditingProduct(null); }}
                   className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
-                    adminTab === 'orders' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
+                    adminTab === 'orders' 
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+                      : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
                   }`}
                 >
                   Incoming Orders ({orders.length})
                 </button>
+
+                {/* 🔥 নতুন এন্টারপ্রাইজ মেগা বাটন: অ্যানালিটিক্স গ্রাফ চার্ট */}
+                <button 
+                  onClick={() => { setAdminTab('analytics'); setEditingProduct(null); }}
+                  className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    adminTab === 'analytics' 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md' 
+                      : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
+                  }`}
+                >
+                  Analytics & Reports 📈
+                </button>
               </div>
 
+              {/* সাব-ট্যাব কনটেন্ট লজিক গেট */}
               <div className="w-full">
-                <button onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} className="mb-4 px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all block">Logout (Lock Panel)</button>
+                <button onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} className="mb-4 px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all block cursor-pointer">Logout (Lock Panel)</button>
                 
                 {adminTab === 'add' || editingProduct ? (
                   <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} setOrders={setOrders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
@@ -336,8 +359,8 @@ export default function App() {
                             </div>
                           </div>
                           <div className="flex gap-2 w-full sm:w-auto justify-end">
-                            <button onClick={() => setEditingProduct(p)} className="flex items-center gap-1 text-xs bg-amber-500 text-white px-3 py-2 rounded-xl font-bold">Edit</button>
-                            <button onClick={() => deleteProduct(p.id)} className="flex items-center gap-1 text-xs bg-rose-500 text-white px-3 py-2 rounded-xl font-bold">Delete</button>
+                            <button onClick={() => setEditingProduct(p)} className="flex items-center gap-1 text-xs bg-amber-500 text-white px-3 py-2 rounded-xl font-bold cursor-pointer">Edit</button>
+                            <button onClick={() => deleteProduct(p.id)} className="flex items-center gap-1 text-xs bg-rose-500 text-white px-3 py-2 rounded-xl font-bold cursor-pointer">Delete</button>
                           </div>
                         </div>
                       ))}
@@ -350,7 +373,7 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* 3. CART VIEW */}
+          {/* 3. SHOPPING CART VIEW */}
           {page === 'cart' && (
             <motion.div key="cart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} setPage={setPage} products={products} setProducts={setProducts} orders={orders} setOrders={setOrders} />
@@ -360,6 +383,7 @@ export default function App() {
         </AnimatePresence>
       </main>
 
+      {/* 🔐 Moderator Secure Gate Popup */}
       <AnimatePresence>
         {showLockModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
@@ -374,8 +398,8 @@ export default function App() {
                   <button type="button" onClick={() => setShowPasswordText(!showPasswordText)} className="absolute right-3.5 text-slate-400">{showPasswordText ? <EyeOff size={16} /> : <Eye size={16} />}</button>
                 </div>
                 <div className="grid grid-cols-2 gap-2.5 pt-1">
-                  <button type="button" onClick={() => setShowLockModal(false)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl text-xs uppercase">Close</button>
-                  <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-cyan-400 dark:to-blue-600 text-white dark:text-slate-950 font-black py-3 rounded-xl text-xs uppercase shadow-md">Unlock Panel</button>
+                  <button type="button" onClick={() => setShowLockModal(false)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl text-xs uppercase cursor-pointer">Close</button>
+                  <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-cyan-400 dark:to-blue-600 text-white dark:text-slate-950 font-black py-3 rounded-xl text-xs uppercase shadow-md cursor-pointer">Unlock Panel</button>
                 </div>
               </form>
             </motion.div>
