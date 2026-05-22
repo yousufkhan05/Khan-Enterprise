@@ -96,11 +96,45 @@ export default function App() {
       setIsAdminLoggedIn(true);
       setShowLockModal(false);
       setPage('admin');
-      setAdminTab('orders'); // লগইন করার পর সরাসরি লাইভ অর্ডার ড্যাশবোর্ডে নিয়ে যাবে
+      setAdminTab('orders'); 
       setAdminPassword('');
     } else {
       alert('🚫 Invalid Password!');
       setAdminPassword('');
+    }
+  };
+
+  // 🚀 ফিক্সড সিকিউরড বাটন ট্রিগার লজিক (যা মিসিং ছিল)
+  const handleAdminButtonClick = () => {
+    if (isAdminLoggedIn) {
+      setPage('admin');
+      setAdminTab('orders');
+      setEditingProduct(null);
+    } else {
+      setShowLockModal(true); 
+    }
+  };
+
+  const addProduct = (newProduct) => {
+    const updated = [newProduct, ...products];
+    setProducts(updated);
+    localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
+  };
+
+  const updateProduct = (updatedProduct) => {
+    const updated = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
+    setProducts(updated);
+    localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
+    setEditingProduct(null);
+    setAdminTab('manage');
+    alert('Product details have been successfully updated!');
+  };
+
+  const deleteProduct = (id) => {
+    if(window.confirm("Are you sure you want to permanently delete this product?")) {
+      const updated = products.filter(p => p.id !== id);
+      setProducts(updated);
+      localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
     }
   };
 
@@ -116,12 +150,37 @@ export default function App() {
     }
   };
 
+  const addReview = (productId, review) => {
+    const updated = products.map(p => {
+      if (p.id === productId) {
+        return { ...p, reviews: [review, ...(p.reviews || [])] };
+      }
+      return p;
+    });
+    setProducts(updated);
+    localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
+  };
+
+  const addToCart = (product) => setCart([...cart, product]);
+  const removeFromCart = (indexToRemove) => setCart(cart.filter((_, index) => index !== indexToRemove));
+  const clearCart = () => setCart([]);
+
+  const filteredProducts = selectedCategory === 'All' 
+    ? products 
+    : products.filter(p => p.category === selectedCategory || (selectedCategory === 'Smartwatch' && p.name.toLowerCase().includes('watch')) || (selectedCategory === 'Headphone' && p.name.toLowerCase().includes('headphone')));
+
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-500 font-sans ${
       darkMode ? 'bg-[rgba(7,11,23,1)] text-slate-100' : 'bg-slate-50 text-slate-900'
     } relative overflow-x-hidden`}>
       
-      {/* 🌟 Mobile-Responsive Header (Flex-wrap fixed) */}
+      {darkMode && (
+        <>
+          <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />
+          <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[130px] pointer-events-none" />
+        </>
+      )}
+      
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/60 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
           
@@ -136,7 +195,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Navigation Controls Wrapper */}
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 w-full sm:w-auto">
             <button onClick={() => setPage('shop')} className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 ${page === 'shop' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
               <LayoutGrid size={14} /> <span>Shop</span>
@@ -158,12 +216,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* 🌀 Main Dynamic Body */}
       <main className="flex-grow max-w-6xl mx-auto px-4 py-6 z-10 w-full">
         <AnimatePresence mode="wait">
           {page === 'shop' && (
             <motion.div key="shop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-              {/* Premium Slider Banner */}
               <div className="relative h-40 sm:h-56 rounded-3xl overflow-hidden shadow-md">
                 <AnimatePresence mode="wait">
                   <motion.div key={currentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`absolute inset-0 bg-gradient-to-r ${heroSlides[currentSlide].bg} p-6 flex flex-col justify-center text-white`}>
@@ -173,7 +229,6 @@ export default function App() {
                 </AnimatePresence>
               </div>
 
-              {/* Grid Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map(p => <ProductCard key={p.id} product={p} addToCart={addToCart} addReview={addReview} setPage={setPage} />)}
               </div>
@@ -194,23 +249,6 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* 🔐 Gatekeeper Access Modal */}
-      {showLockModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 border p-5 rounded-2xl shadow-xl text-center">
-            <h3 className="text-sm font-black">Moderator Security Code</h3>
-            <form onSubmit={handleAdminAccessSubmit} className="mt-4 space-y-3">
-              <input type="password" required placeholder="Enter Secret Code..." value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="w-full p-3 text-xs rounded-xl border bg-transparent text-center font-mono" />
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setShowLockModal(false)} className="bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl text-xs font-bold">Close</button>
-                <button type="submit" className="bg-blue-600 text-white py-2.5 rounded-xl text-xs font-black">Unlock</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 🌟 Absolute Sticky Footer Fix */}
       <footer className="w-full border-t border-slate-200/50 dark:border-slate-900 bg-white/50 dark:bg-slate-900/20 py-4 text-center text-[10px] text-slate-400 backdrop-blur-md">
         © {new Date().getFullYear()} Khan Enterprise. All Rights Reserved. Developed by Yousuf
       </footer>
