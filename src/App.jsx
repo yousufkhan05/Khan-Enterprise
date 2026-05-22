@@ -178,48 +178,57 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-500 font-sans ${
       darkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
-    } relative overflow-x-hidden pt-[90px]`}>
+    } relative overflow-x-hidden pt-[160px] sm:pt-[90px]`}>
       
+      {/* 🌟 Fixed Header (কড়া সিএসএস পজিশনিং দিয়ে লোগো উপচে পড়া ওভারল্যাপ ফিক্সড) */}
       <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-row items-center justify-between gap-4">
-          <div onClick={() => setPage('shop')} className="flex items-center gap-2 cursor-pointer select-none">
-            <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md"><ShieldCheck size={20} /></div>
-            <h1 className="text-base font-black tracking-tight uppercase">Khan <span className="text-blue-600 dark:text-cyan-400">Enterprise</span></h1>
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          
+          <div onClick={() => setPage('shop')} className="flex items-center gap-2 cursor-pointer select-none shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md"><ShieldCheck size={18} /></div>
+            <h1 className="text-sm sm:text-base font-black tracking-tight uppercase whitespace-nowrap">Khan <span className="text-blue-600 dark:text-cyan-400">Enterprise</span></h1>
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <button onClick={() => setPage('shop')} className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer ${page === 'shop' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}><LayoutGrid size={14} /> <span>Shop</span></button>
-            <button onClick={handleAdminButtonClick} className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer ${page === 'admin' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}><Lock size={13} /> <span>Admin</span></button>
-            <button onClick={() => setPage('cart')} className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 relative cursor-pointer ${page === 'cart' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'}`}><ShoppingBag size={14} /> <span>Cart</span>{cart.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black">{cart.length}</span>}</button>
-            <button onClick={() => setDarkMode(!darkMode)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl cursor-pointer">{darkMode ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} />}</button>
+
+          <div className="flex items-center justify-end gap-2 w-full sm:w-auto shrink-0 pr-1">
+            <button onClick={() => setPage('shop')} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all ${page === 'shop' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}><LayoutGrid size={13} /> <span>Shop</span></button>
+            <button onClick={handleAdminButtonClick} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-all ${page === 'admin' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}><Lock size={12} /> <span>Admin</span></button>
+            <button onClick={() => setPage('cart')} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-black flex items-center gap-1 relative cursor-pointer transition-all ${page === 'cart' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'}`}><ShoppingBag size={13} /> <span>Cart</span>{cart.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-black">{cart.length}</span>}</button>
+            <button onClick={() => setDarkMode(!darkMode)} className="p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl cursor-pointer">{darkMode ? <Sun size={13} className="text-amber-400" /> : <Moon size={13} />}</button>
           </div>
+
         </div>
       </header>
 
-      <main className="flex-grow max-w-6xl mx-auto px-4 py-6 w-full">
+      <main className="flex-grow max-w-6xl mx-auto px-4 py-4 w-full">
         <AnimatePresence mode="wait">
           {page === 'shop' && (
             <motion.div key="shop-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+              
+              {/* 🎠 ব্যানার ক্যারোসেল (ডার্ক মোডে ব্যাকগ্রাউন্ডের সাথে লেখা লেপ্টে যাওয়া ফিক্স করা হয়েছে) */}
               {heroSlides.length > 0 && (
-                <div className="relative h-44 sm:h-56 rounded-3xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-800 bg-gradient-to-tr from-slate-100 to-white dark:from-slate-900 dark:to-slate-950 p-6 sm:p-10 flex flex-col justify-center">
+                <div className="relative h-44 sm:h-56 rounded-3xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-10 flex flex-col justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-950 opacity-100" />
                   <AnimatePresence mode="wait">
-                    <motion.div key={currentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <motion.div key={currentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="z-10 relative">
                       <span className="px-2.5 py-0.5 bg-blue-600/10 text-blue-600 dark:bg-blue-400/20 dark:text-cyan-400 text-[10px] font-black rounded-full uppercase tracking-wider mb-2 border border-blue-500/20 inline-block">{heroSlides[currentSlide].badge}</span>
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight max-w-xl">{heroSlides[currentSlide].title}</h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{heroSlides[currentSlide].subtitle}</p>
+                      <h2 className="text-base sm:text-2xl font-black text-slate-900 dark:text-white leading-tight max-w-xl">{heroSlides[currentSlide].title}</h2>
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{heroSlides[currentSlide].subtitle}</p>
                     </motion.div>
                   </AnimatePresence>
                   <div className="absolute bottom-3 right-6 flex gap-1 z-20">
                     {heroSlides.map((_, idx) => (
-                      <button key={idx} onClick={() => setCurrentSlide(idx)} className={`h-1 rounded-full transition-all ${idx === currentSlide ? 'w-4 bg-blue-600 dark:bg-cyan-400' : 'w-1 bg-slate-300 dark:bg-slate-700'}`} />
+                      <button key={idx} onClick={() => setCurrentSlide(idx)} className={`h-1 transition-all ${idx === currentSlide ? 'w-4 bg-blue-600 dark:bg-cyan-400' : 'w-1 bg-slate-300 dark:bg-slate-700'}`} />
                     ))}
                   </div>
                 </div>
               )}
+
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {['All', 'Smartwatch', 'Headphone'].map((cat) => (
                   <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 text-xs font-black rounded-xl border cursor-pointer ${selectedCategory === cat ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'}`}>{cat === 'All' ? '🎯 All Collection' : cat === 'Smartwatch' ? '⌚ Smartwatch' : '🎧 Headphone'}</button>
                 ))}
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map(p => <ProductCard key={p.id} product={p} addToCart={addToCart} addReview={addReview} setPage={setPage} />)}
               </div>
@@ -246,7 +255,6 @@ export default function App() {
         {showLockModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
             <div className="w-full max-w-sm bg-white dark:bg-slate-900 border p-6 rounded-2xl shadow-xl text-center border-slate-200 dark:border-slate-800">
-              <div className="w-12 h-14 bg-blue-500/10 text-blue-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3"><KeyRound size={22} /></div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white">Moderator Access</h3>
               <form onSubmit={handleAdminAccessSubmit} className="mt-4 space-y-3">
                 <input type="text" style={{ WebkitTextSecurity: 'disc' }} required placeholder="Enter Password..." value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="w-full p-3 text-xs rounded-xl border bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white border-slate-300 dark:border-slate-800 text-center font-mono focus:outline-none focus:border-blue-500" />
