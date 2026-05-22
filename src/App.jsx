@@ -111,7 +111,7 @@ export default function App() {
       setIsAdminLoggedIn(true);
       setShowLockModal(false);
       setPage('admin');
-      setAdminTab('add'); // অ্যাডমিন লগইন করার পর প্রথম ট্যাব দেখাবে
+      setAdminTab('add'); 
       setEditingProduct(null);
       setAdminPassword('');
     } else {
@@ -197,7 +197,7 @@ export default function App() {
         </>
       )}
       
-      {/* 🌟 Navigation Fixed Top Header */}
+      {/* 🌟 Navigation Header */}
       <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/60 shadow-md transition-all">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
           
@@ -242,11 +242,11 @@ export default function App() {
         </div>
       </header>
 
-      {/* 🌀 Main Display Area */}
+      {/* 🌀 Main Display Window */}
       <main className="max-w-6xl mx-auto px-4 pt-24 pb-6 z-10 relative">
         <AnimatePresence mode="wait">
           
-          {/* 1. SHOP FRONT VIEW */}
+          {/* 1. SHOP FRONT */}
           {page === 'shop' && (
             <motion.div key="shop" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-8">
               <div className="relative h-48 sm:h-64 rounded-3xl overflow-hidden shadow-xl border border-slate-200/30 dark:border-slate-800/50">
@@ -287,11 +287,11 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* 2. ADMIN MODERATOR EXECUTIVE VIEW */}
+          {/* 2. ADMIN PANEL (সম্পূর্ণ এরর ফিক্সড প্রপ্স কনফিগারেশন) */}
           {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
               
-              {/* 🛠️ আপডেটেড ৪টি ডাইনামিক সাব-ট্যাব বাটন কন্ট্রোল (হাই কনট্রাস্ট মোবাইল ফিক্সড কালার লেয়ার) */}
+              {/* ৪টি ডাইনামিক সাব-ট্যাব বাটন কন্ট্রোল */}
               <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <button 
                   onClick={() => { setAdminTab('add'); setEditingProduct(null); }}
@@ -326,7 +326,6 @@ export default function App() {
                   Incoming Orders ({orders.length})
                 </button>
 
-                {/* 🔥 নতুন এন্টারপ্রাইজ মেগা বাটন: অ্যানালিটিক্স গ্রাফ চার্ট */}
                 <button 
                   onClick={() => { setAdminTab('analytics'); setEditingProduct(null); }}
                   className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
@@ -339,12 +338,13 @@ export default function App() {
                 </button>
               </div>
 
-              {/* সাব-ট্যাব কনটেন্ট লজিক গেট */}
+              {/* মেইন কনটেন্ট এরিয়া */}
               <div className="w-full">
                 <button onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} className="mb-4 px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all block cursor-pointer">Logout (Lock Panel)</button>
                 
+                {/* 🎯 এখানে রেন্ডারিং কন্ডিশন ফিক্সড করা হয়েছে যাতে সব প্রপ্স নিখুঁতভাবে পাস হয় */}
                 {adminTab === 'add' || editingProduct ? (
-                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} setOrders={setOrders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
+                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
                 ) : adminTab === 'manage' ? (
                   <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 p-4 sm:p-6 shadow-xl">
                     <h3 className="text-lg font-black mb-4 flex items-center gap-1.5"><Settings size={18} /> Inventory Stock Controller</h3>
@@ -367,13 +367,14 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} setOrders={setOrders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
+                  /* অ্যানালিটিক্স এবং ইনকামিং অর্ডার ট্যাব রেন্ডারিং গেট */
+                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
                 )}
               </div>
             </motion.div>
           )}
 
-          {/* 3. SHOPPING CART VIEW */}
+          {/* 3. CART VIEW */}
           {page === 'cart' && (
             <motion.div key="cart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} setPage={setPage} products={products} setProducts={setProducts} orders={orders} setOrders={setOrders} />
@@ -383,7 +384,7 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* 🔐 Moderator Secure Gate Popup */}
+      {/* Security Gateway Popup */}
       <AnimatePresence>
         {showLockModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
