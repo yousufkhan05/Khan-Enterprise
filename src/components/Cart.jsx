@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Trash2, CheckCircle, ArrowLeft, Truck, User, MapPin, MessageSquare, ShoppingBag } from 'lucide-react';
 
 export default function Cart({ cart, removeFromCart, clearCart, setPage, products, setProducts, orders, setOrders }) {

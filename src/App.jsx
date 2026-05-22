@@ -180,7 +180,7 @@ export default function App() {
       darkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     } relative overflow-x-hidden pt-[90px]`}>
       
-      <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+      <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-row items-center justify-between gap-4">
           <div onClick={() => setPage('shop')} className="flex items-center gap-2 cursor-pointer select-none">
             <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md"><ShieldCheck size={20} /></div>
@@ -228,9 +228,6 @@ export default function App() {
 
           {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
-              <div className="mb-4">
-                <button onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} className="px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all cursor-pointer">Logout (Lock Panel)</button>
-              </div>
               <AdminPanel products={products} setProducts={setProducts} addProduct={addProduct} updateProduct={updateProduct} editingProduct={editingProduct} setPage={setPage} orders={orders} setOrders={setOrders} adminTab={adminTab} setAdminTab={setAdminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} setEditingProduct={setEditingProduct} deleteProduct={deleteProduct} heroSlides={heroSlides} setHeroSlides={setHeroSlides} />
             </motion.div>
           )}

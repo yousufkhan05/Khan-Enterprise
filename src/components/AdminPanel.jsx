@@ -80,7 +80,8 @@ export default function AdminPanel({
   };
 
   return (
-    <div className="space-y-6 text-slate-900 dark:text-slate-100">
+    <div className="space-y-6 bg-transparent text-slate-900 dark:text-slate-100">
+      
       <div className="flex flex-wrap gap-2 bg-slate-200 dark:bg-slate-900 p-2 rounded-2xl border border-slate-300 dark:border-slate-800">
         <button type="button" onClick={() => setAdminTab('orders')} className={`px-4 py-2 text-xs font-black rounded-xl cursor-pointer ${adminTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-slate-300 dark:bg-slate-800 text-slate-800 dark:text-slate-400'}`}>Incoming Orders ({orders.length})</button>
         <button type="button" onClick={() => { setAdminTab('add'); setEditingProduct(null); }} className={`px-4 py-2 text-xs font-black rounded-xl cursor-pointer ${adminTab === 'add' && !editingProduct ? 'bg-blue-600 text-white' : 'bg-slate-300 dark:bg-slate-800 text-slate-800 dark:text-slate-400'}`}>Add Product</button>
@@ -97,6 +98,7 @@ export default function AdminPanel({
               <div className="flex justify-between font-bold border-b pb-2 dark:border-slate-800"><span>ID: #{order.orderId}</span><span className="text-blue-500">{order.status}</span></div>
               <div className="text-slate-800 dark:text-slate-200"><strong>Client:</strong> {order.customer.name} | {order.customer.phone}</div>
               <div className="bg-slate-50 dark:bg-slate-950 p-2 rounded-xl text-slate-800 dark:text-slate-200">{order.items.map((it, i) => <div key={i} className="flex justify-between"><span>{it.name}</span><strong>৳{it.price}</strong></div>)}</div>
+              <div className="flex justify-between items-center font-bold"><span>Total:</span><span className="text-sm text-emerald-500">৳{order.grandTotal}</span></div>
               <div className="flex justify-end gap-2 pt-2 border-t dark:border-slate-800"><button type="button" onClick={() => updateOrderStatus(order.orderId, order.status)} className="bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-lg cursor-pointer">Toggle Status</button><button type="button" onClick={() => deleteOrder(order.orderId)} className="bg-rose-500/10 text-rose-500 px-3 py-1.5 rounded-lg cursor-pointer">Delete</button></div>
             </div>
           ))}
