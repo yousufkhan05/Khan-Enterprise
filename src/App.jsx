@@ -113,7 +113,7 @@ export default function App() {
       setPage('admin');
       setAdminPassword('');
     } else {
-      alert('🚫 Invalid Password!');
+      alert('🚫 Invalid Password! You are not an authorized moderator.');
       setAdminPassword('');
     }
   };
@@ -140,11 +140,11 @@ export default function App() {
     localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
     setEditingProduct(null);
     setAdminTab('manage');
-    alert('Product details updated!');
+    alert('Product details have been successfully updated!');
   };
 
   const deleteProduct = (id) => {
-    if(window.confirm("Are you sure?")) {
+    if(window.confirm("Are you sure you want to permanently delete this product?")) {
       const updated = products.filter(p => p.id !== id);
       setProducts(updated);
       localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
@@ -158,7 +158,7 @@ export default function App() {
   };
 
   const deleteOrder = (orderId) => {
-    if(window.confirm("Delete order?")) {
+    if(window.confirm("Do you want to delete this order from the dashboard?")) {
       const updated = orders.filter(order => order.orderId !== orderId);
       setOrders(updated);
     }
@@ -184,18 +184,19 @@ export default function App() {
     : products.filter(p => p.category === selectedCategory || (selectedCategory === 'Smartwatch' && p.name.toLowerCase().includes('watch')) || (selectedCategory === 'Headphone' && p.name.toLowerCase().includes('headphone')));
 
   return (
-    <div className={`min-h-screen flex flex-col justify-between transition-colors duration-500 font-sans ${
+    <div className={`min-h-screen transition-colors duration-500 font-sans ${
       darkMode ? 'bg-[rgba(7,11,23,1)] text-slate-100' : 'bg-slate-50 text-slate-900'
-    } relative overflow-x-hidden`}>
+    } relative`}>
       
       {darkMode && (
         <>
-          <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />
-          <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[130px] pointer-events-none" />
+          <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none z-0" />
+          <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[130px] pointer-events-none z-0" />
         </>
       )}
       
-      <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/60 shadow-sm transition-all">
+      {/* 🌟 আল্ট্রা-স্টিকি হেডার ফিক্সড লেয়ার (fixed top-0 w-full z-[100] প্লাস backdrop-blur-md লক করা হয়েছে) */}
+      <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/60 shadow-md transition-all">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
           
           <div onClick={() => setPage('shop')} className="flex items-center gap-2.5 cursor-pointer group">
@@ -239,9 +240,11 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-grow max-w-6xl mx-auto px-4 py-6 z-10 relative w-full">
+      {/* 🌀 মেইন এরিয়া (হেডার ফিক্সড হওয়ার কারণে এখানে pt-20 প্যাডিং দিয়ে কনটেন্ট নামানো হয়েছে) */}
+      <main className="max-w-6xl mx-auto px-4 pt-20 pb-6 z-10 relative">
         <AnimatePresence mode="wait">
           
+          {/* 1. SHOP VIEW */}
           {page === 'shop' && (
             <motion.div key="shop" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-8">
               <div className="relative h-48 sm:h-64 rounded-3xl overflow-hidden shadow-xl border border-slate-200/30 dark:border-slate-800/50">
@@ -282,24 +285,74 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* 2. ADMIN MODERATOR PANELS */}
           {page === 'admin' && isAdminLoggedIn && (
             <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
               <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <button onClick={() => { setAdminTab('add'); setEditingProduct(null); }} className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${adminTab === 'add' && !editingProduct ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'}`}>Add New Product</button>
-                <button onClick={() => { setAdminTab('manage'); setEditingProduct(null); }} className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${adminTab === 'manage' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'}`}>Manage Products ({products.length})</button>
-                <button onClick={() => { setAdminTab('orders'); setEditingProduct(null); }} className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${adminTab === 'orders' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'}`}>Incoming Orders ({orders.length})</button>
+                <button 
+                  onClick={() => { setAdminTab('add'); setEditingProduct(null); }}
+                  className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    adminTab === 'add' && !editingProduct ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
+                  }`}
+                >
+                  Add New Product
+                </button>
+
+                <button 
+                  onClick={() => { setAdminTab('manage'); setEditingProduct(null); }}
+                  className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    adminTab === 'manage' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
+                  }`}
+                >
+                  Manage Products ({products.length})
+                </button>
+
+                <button 
+                  onClick={() => { setAdminTab('orders'); setEditingProduct(null); }}
+                  className={`px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                    adminTab === 'orders' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
+                  }`}
+                >
+                  Incoming Orders ({orders.length})
+                </button>
               </div>
 
               <div className="w-full">
-                <button onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} className="mb-4 px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all block">Logout</button>
-                <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} setOrders={setOrders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} products={products} setProducts={setProducts} deleteProduct={deleteProduct} setEditingProduct={setEditingProduct} />
+                <button onClick={() => { setIsAdminLoggedIn(false); setPage('shop'); }} className="mb-4 px-3 py-1.5 text-xs font-bold rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white transition-all block">Logout (Lock Panel)</button>
+                
+                {adminTab === 'add' || editingProduct ? (
+                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} setOrders={setOrders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
+                ) : adminTab === 'manage' ? (
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 p-4 sm:p-6 shadow-xl">
+                    <h3 className="text-lg font-black mb-4 flex items-center gap-1.5"><Settings size={18} /> Inventory Stock Controller</h3>
+                    <div className="space-y-3">
+                      {products.map(p => (
+                        <div key={p.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border dark:border-slate-850">
+                          <div className="flex items-center gap-3">
+                            <img src={p.images?.[0] || p.image} alt="" className="w-12 h-12 object-contain bg-white dark:bg-slate-900 p-1 rounded-xl border dark:border-slate-800" />
+                            <div>
+                              <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-1">{p.name}</h4>
+                              <p className="text-xs text-slate-400 mt-0.5">Price: ৳{p.price} | Stock: {p.stock} pcs</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 w-full sm:w-auto justify-end">
+                            <button onClick={() => setEditingProduct(p)} className="flex items-center gap-1 text-xs bg-amber-500 text-white px-3 py-2 rounded-xl font-bold">Edit</button>
+                            <button onClick={() => deleteProduct(p.id)} className="flex items-center gap-1 text-xs bg-rose-500 text-white px-3 py-2 rounded-xl font-bold">Delete</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <AdminPanel addProduct={addProduct} setPage={setPage} editingProduct={editingProduct} updateProduct={updateProduct} orders={orders} setOrders={setOrders} adminTab={adminTab} updateOrderStatus={updateOrderStatus} deleteOrder={deleteOrder} />
+                )}
               </div>
             </motion.div>
           )}
 
-          {/* 🎯 [FIXED LINE] এখানে 'cart={cart}' প্রপ্সটি সফলভাবে পাস করা হয়েছে */}
+          {/* 3. CART VIEW */}
           {page === 'cart' && (
-            <motion.div key="cart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full">
+            <motion.div key="cart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} setPage={setPage} products={products} setProducts={setProducts} orders={orders} setOrders={setOrders} />
             </motion.div>
           )}
@@ -309,18 +362,20 @@ export default function App() {
 
       <AnimatePresence>
         {showLockModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-sm bg-white dark:bg-slate-900 border p-6 rounded-3xl shadow-2xl text-center border-slate-200 dark:border-slate-800">
               <div className="w-14 h-14 bg-blue-500/10 text-blue-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4"><KeyRound size={26} /></div>
               <h3 className="text-lg font-black">Moderator Security Access</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Please enter your secret password to unlock the admin panel.</p>
+              
               <form onSubmit={handleAdminAccessSubmit} className="mt-5 space-y-3 text-left">
                 <div className="relative flex items-center">
-                  <input type={showPasswordText ? "text" : "password"} required placeholder="Enter Secret Code..." value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="w-full p-3.5 pr-11 text-xs rounded-xl border dark:bg-slate-950 text-slate-900 dark:text-white font-mono focus:outline-none" />
+                  <input type={showPasswordText ? "text" : "password"} required placeholder="Enter Secret Code..." value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="w-full p-3.5 pr-11 text-xs rounded-xl border dark:bg-slate-950 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-blue-500" />
                   <button type="button" onClick={() => setShowPasswordText(!showPasswordText)} className="absolute right-3.5 text-slate-400">{showPasswordText ? <EyeOff size={16} /> : <Eye size={16} />}</button>
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
                   <button type="button" onClick={() => setShowLockModal(false)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl text-xs uppercase">Close</button>
-                  <button type="submit" className="w-full bg-blue-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">Unlock</button>
+                  <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-cyan-400 dark:to-blue-600 text-white dark:text-slate-950 font-black py-3 rounded-xl text-xs uppercase shadow-md">Unlock Panel</button>
                 </div>
               </form>
             </motion.div>
@@ -328,7 +383,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="w-full border-t bg-white dark:bg-slate-900/40 py-6 text-center text-xs text-slate-400 font-medium backdrop-blur-md mt-auto">
+      <footer className="w-full border-t bg-white/50 dark:bg-slate-900/20 py-6 text-center text-xs text-slate-400 font-medium backdrop-blur-md relative z-10">
         <div className="flex items-center justify-center gap-1">
           <span>© {new Date().getFullYear()} Khan Enterprise. All Rights Reserved. Developed with</span>
           <Heart size={12} className="text-rose-500 fill-rose-500 animate-pulse" />
