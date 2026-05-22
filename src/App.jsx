@@ -1,267 +1,283 @@
-import React, { useState, useEffect } from 'react';
-import ProductCard from './components/ProductCard';
-import AdminPanel from './components/AdminPanel';
-import Cart from './components/Cart';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, PlusCircle, LayoutGrid, Sun, Moon, ShieldCheck, Heart, Settings, Edit, Trash2, Lock, KeyRound, Eye, EyeOff, Truck, RefreshCw, Headphones, Layers, ClipboardList } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Trash2, Smartphone, CheckCircle, ArrowLeft, Truck, User, MapPin, MessageSquare, ShoppingBag, Download } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 
-const initialProducts = [
-  {
-    id: 1,
-    name: "Premium Wireless Headphones Pro",
-    originalPrice: 4500,
-    price: 3200,
-    stock: 100,
-    category: "Headphone",
-    description: "High-resolution audio, 4 noise cancellation microphones, and continuous 40 hours of mega battery life. Perfect choice for gamers and music lovers.",
-    images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500"],
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
-    reviews: []
-  },
-  {
-    id: 2,
-    name: "Ultra Smart Watch Series 9",
-    originalPrice: 3500,
-    price: 2400,
-    stock: 5,
-    category: "Smartwatch",
-    description: "AMOLED display, real-time heart rate tracking, Bluetooth calling system, and waterproof body. A royal gadget with premium metallic finishing.",
-    images: ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500"],
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
-    reviews: []
-  }
-];
-
-const heroSlides = [
-  {
-    title: "The Future of Smart Gadgets Now in Your Hands",
-    subtitle: "Exclusive Collection from Khan Enterprise",
-    bg: "from-blue-600 to-indigo-800 dark:from-slate-900 dark:to-slate-950",
-    badge: "MEGA EID SALE 🔥"
-  },
-  {
-    title: "Premium Audio Experience, Zero Noise!",
-    subtitle: "Flat 30% Off on Wireless Headphones Collection",
-    bg: "from-purple-600 to-pink-700 dark:from-slate-900 dark:to-slate-900",
-    badge: "LIMITED OFFER ⚡"
-  },
-  {
-    title: "Smart Lifestyle, Intelligent Tracking",
-    subtitle: "Get Guaranteed Cashback on Genuine Smartwatches",
-    bg: "from-cyan-600 to-teal-700 dark:from-slate-950 dark:to-slate-900",
-    badge: "100% GENUINE PRODUCT 🛡️"
-  }
-];
-
-export default function App() {
-  const [page, setPage] = useState('shop');
-  const [adminTab, setAdminTab] = useState('add'); 
-  const [editingProduct, setEditingProduct] = useState(null); 
-  const [selectedCategory, setSelectedCategory] = useState('All'); 
-  const [currentSlide, setCurrentSlide] = useState(0); 
+export default function Cart({ cart, removeFromCart, clearCart, setPage, products, setProducts, orders, setOrders }) {
+  const [customerName, setCustomerName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [district, setDistrict] = useState('');
+  const [fullAddress, setFullAddress] = useState('');
   
-  // Security & Orders States
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false); 
-  const [showLockModal, setShowLockModal] = useState(false); 
-  const [adminPassword, setAdminPassword] = useState(''); 
-  const [showPasswordText, setShowPasswordText] = useState(false); 
+  const [paymentMethod, setPaymentMethod] = useState('cod'); 
+  const [trxId, setTrxId] = useState('');
+  const [senderNumber, setSenderNumber] = useState('');
   
-  const [orders, setOrders] = useState(() => {
-    const savedOrders = localStorage.getItem('khan_enterprise_orders');
-    return savedOrders ? JSON.parse(savedOrders) : [];
-  });
+  const [isOrdered, setIsOrdered] = useState(false);
+  const [lastOrderDetails, setLastOrderDetails] = useState(null);
 
-  const SECRET_ADMIN_PASSWORD = "khanenterprise05"; 
+  const totalPrice = cart.reduce((sum, item) => sum + Number(item.price), 0);
+  const deliveryCharge = totalPrice > 0 ? (district === 'Dhaka' ? 60 : 120) : 0;
+  const finalAmount = totalPrice + deliveryCharge;
 
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedMode = localStorage.getItem('khan_ent_dark_mode');
-    return savedMode === 'true';
-  });
+  const downloadPDFInvoice = () => {
+    if (!lastOrderDetails) return;
 
-  const [products, setProducts] = useState(() => {
-    const savedProducts = localStorage.getItem('khan_enterprise_products');
-    return savedProducts ? JSON.parse(savedProducts) : initialProducts;
-  });
+    const element = document.getElementById('invoice-download-area');
+    const options = {
+      margin: 10,
+      filename: `Invoice_${lastOrderDetails.orderId}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-  const [cart, setCart] = useState([]);
+    html2pdf().set(options).from(element).save();
+  };
 
-  useEffect(() => {
-    if (page !== 'shop') return;
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [page]);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('khan_ent_dark_mode', darkMode);
-  }, [darkMode]);
-
-  useEffect(() => {
-    localStorage.setItem('khan_enterprise_orders', JSON.stringify(orders));
-  }, [orders]);
-
-  const handleAdminAccessSubmit = (e) => {
+  const handleCheckout = (e) => {
     e.preventDefault();
-    if (adminPassword === SECRET_ADMIN_PASSWORD) {
-      setIsAdminLoggedIn(true);
-      setShowLockModal(false);
-      setPage('admin');
-      setAdminPassword('');
-    } else {
-      alert('🚫 Invalid Password! You are not an authorized moderator.');
-      setAdminPassword('');
+    
+    if (!customerName || !phoneNumber || !district || !fullAddress) {
+      return alert('Please enter your Name, Phone Number, and Complete Address details.');
     }
-  };
 
-  const handleAdminButtonClick = () => {
-    if (isAdminLoggedIn) {
-      setPage('admin');
-      setAdminTab('add');
-      setEditingProduct(null);
-    } else {
-      setShowLockModal(true); 
+    if ((paymentMethod === 'bkash' || paymentMethod === 'nagad') && (!senderNumber || !trxId)) {
+      return alert('For digital payments, sender number and transaction TxID are required.');
     }
-  };
 
-  const addProduct = (newProduct) => {
-    const updated = [newProduct, ...products];
-    setProducts(updated);
-    localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
-  };
-
-  const updateProduct = (updatedProduct) => {
-    const updated = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
-    setProducts(updated);
-    localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
-    setEditingProduct(null);
-    setAdminTab('manage');
-    alert('Product details have been successfully updated!');
-  };
-
-  const deleteProduct = (id) => {
-    if(window.confirm("Are you sure you want to permanently delete this product?")) {
-      const updated = products.filter(p => p.id !== id);
-      setProducts(updated);
-      localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
-    }
-  };
-
-  const updateOrderStatus = (orderId, currentStatus) => {
-    const nextStatus = currentStatus === 'Pending' ? 'Completed' : 'Pending';
-    const updated = orders.map(order => order.orderId === orderId ? { ...order, status: nextStatus } : order);
-    setOrders(updated);
-  };
-
-  const deleteOrder = (orderId) => {
-    if(window.confirm("Do you want to delete this order from the dashboard?")) {
-      const updated = orders.filter(order => order.orderId !== orderId);
-      setOrders(updated);
-    }
-  };
-
-  const addReview = (productId, review) => {
-    const updated = products.map(p => {
-      if (p.id === productId) {
-        return { ...p, reviews: [review, ...(p.reviews || [])] };
-      }
-      return p;
-    });
-    setProducts(updated);
-    localStorage.setItem('khan_enterprise_products', JSON.stringify(updated));
-  };
-
-  const addToCart = (product) => setCart([...cart, product]);
-  const removeFromCart = (indexToRemove) => setCart(cart.filter((_, index) => index !== indexToRemove));
-  const clearCart = () => setCart([]);
-
-  const filteredProducts = selectedCategory === 'All' 
-    ? products 
-    : products.filter(p => p.category === selectedCategory || (selectedCategory === 'Smartwatch' && p.name.toLowerCase().includes('watch')) || (selectedCategory === 'Headphone' && p.name.toLowerCase().includes('headphone')));
-
-  return (
-    <div className={`min-h-screen transition-colors duration-500 font-sans ${
-      darkMode ? 'bg-[rgba(7,11,23,1)] text-slate-100' : 'bg-slate-50 text-slate-900'
-    } relative overflow-x-hidden`}>
+    if (setProducts && products) {
+      const updatedProducts = products.map(product => {
+        const itemsInCart = cart.filter(item => item.id === product.id).length;
+        if (itemsInCart > 0) {
+          const currentStock = product.stock !== undefined ? product.stock : 100;
+          const newStock = Math.max(0, currentStock - itemsInCart);
+          return { ...product, stock: newStock };
+        }
+        return product;
+      });
       
-      {darkMode && (
-        <>
-          <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />
-          <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[130px] pointer-events-none" />
-        </>
-      )}
-      
-      <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/60 shadow-sm transition-all">
-        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          
-          <div onClick={() => setPage('shop')} className="flex items-center gap-2.5 cursor-pointer group">
-            <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <ShieldCheck size={22} />
+      setProducts(updatedProducts);
+      localStorage.setItem('khan_enterprise_products', JSON.stringify(updatedProducts));
+    }
+
+    const newOrder = {
+      orderId: Date.now(),
+      items: cart.map(item => ({ id: item.id, name: item.name, price: item.price })),
+      subTotal: totalPrice,
+      deliveryCharge,
+      grandTotal: finalAmount,
+      status: 'Pending',
+      customer: {
+        name: customerName,
+        phone: phoneNumber,
+        whatsapp: whatsappNumber || phoneNumber,
+        district,
+        address: fullAddress
+      },
+      payment: {
+        method: paymentMethod,
+        sender: paymentMethod !== 'cod' ? senderNumber : 'N/A',
+        trxId: paymentMethod !== 'cod' ? trxId : 'N/A'
+      },
+      date: new Date().toLocaleDateString()
+    };
+
+    if (setOrders && orders) {
+      const updatedOrders = [newOrder, ...orders];
+      setOrders(updatedOrders);
+      localStorage.setItem('khan_enterprise_orders', JSON.stringify(updatedOrders));
+    }
+
+    setLastOrderDetails(newOrder); 
+    setIsOrdered(true);
+    clearCart(); 
+  };
+
+  // 📝 এখানে ফুটার ফিক্সড করার জন্য min-h-[70vh] লেয়ার দেওয়া হয়েছে
+  if (isOrdered && lastOrderDetails) {
+    return (
+      <div className="min-h-[70vh] flex flex-col justify-center items-center py-6">
+        <div className="w-full max-w-xl p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-2xl">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle size={36} className="animate-bounce" />
             </div>
-            <div>
-              <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">
-                Khan <span className="bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-cyan-400 dark:to-indigo-400 bg-clip-text text-transparent">Enterprise</span>
-              </h1>
-              <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 tracking-widest uppercase -mt-0.5">Premium Gadget Store</p>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white">Order Confirmed Successfully!</h2>
+            <p className="text-xs text-slate-400 mt-1">Thank you for shopping with us. Your invoice is ready below.</p>
+          </div>
+
+          {/* PDF Invoice Area */}
+          <div 
+            id="invoice-download-area" 
+            className="bg-white text-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm text-left font-sans text-xs space-y-4"
+            style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+          >
+            <div className="flex justify-between items-start border-b pb-4 border-slate-200">
+              <div>
+                <h1 className="text-base font-black uppercase text-indigo-600">Khan Enterprise</h1>
+                <p className="text-[10px] text-slate-500">Premium Gadget Store Platform</p>
+              </div>
+              <div className="text-right">
+                <h2 className="text-sm font-black uppercase text-slate-700">Retail Invoice</h2>
+                <p className="text-[10px] text-slate-500">ID: #{lastOrderDetails.orderId}</p>
+                <p className="text-[10px] text-slate-500">Date: {lastOrderDetails.date}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div>
+                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Billing To:</p>
+                <p className="font-bold">{lastOrderDetails.customer.name}</p>
+                <p className="text-slate-600">{lastOrderDetails.customer.phone}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Shipping Address:</p>
+                <p className="text-slate-600 leading-relaxed">{lastOrderDetails.customer.address}</p>
+                <p className="font-bold text-slate-700">{lastOrderDetails.customer.district === 'Dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'}</p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex justify-between font-bold bg-slate-100 p-2 rounded-lg text-slate-700 uppercase text-[10px]">
+                <span>Item Description</span>
+                <span>Amount</span>
+              </div>
+              {lastOrderDetails.items.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center py-2 px-1 border-b border-dashed border-slate-200">
+                  <span className="font-medium text-slate-800">{item.name}</span>
+                  <span className="font-bold">৳{item.price}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <div className="text-[11px] text-slate-500">
+                <p>Payment Method: <span className="font-bold uppercase text-slate-800">{lastOrderDetails.payment.method}</span></p>
+                <p>Status: <span className="font-bold text-amber-600">Pending Verification</span></p>
+              </div>
+              <div className="w-40 text-right space-y-1 text-[11px]">
+                <div className="flex justify-between text-slate-500"><span>Subtotal:</span><span>৳{lastOrderDetails.subTotal}</span></div>
+                <div className="flex justify-between text-slate-500"><span>Delivery:</span><span>৳{lastOrderDetails.deliveryCharge}</span></div>
+                <div className="flex justify-between font-black text-sm border-t pt-1.5 text-indigo-600"><span>Total Paid:</span><span>৳{lastOrderDetails.grandTotal}</span></div>
+              </div>
+            </div>
+
+            <div className="border-t pt-4 text-center text-[10px] text-slate-400 font-medium">
+              Thank you for your business! For any support, contact 01771183608.
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            <button onClick={() => setPage('shop')} className={`p-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all ${page === 'shop' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}`}>
-              <LayoutGrid size={15} /> <span className="hidden sm:inline">Shop</span>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button 
+              onClick={downloadPDFInvoice}
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-xl text-xs uppercase flex items-center justify-center gap-1.5 shadow-md cursor-pointer hover:opacity-90"
+            >
+              <Download size={14} /> Download Receipt (PDF)
             </button>
-
-            <button onClick={handleAdminButtonClick} className={`p-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all ${page === 'admin' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}`}>
-              <Lock size={14} className={isAdminLoggedIn ? "text-emerald-400" : "text-slate-400"} />
-              <span className="hidden sm:inline">Admin</span>
-            </button>
-
-            <button onClick={() => setPage('cart')} className={`p-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-1.5 transition-all relative ${page === 'cart' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:opacity-90'}`}>
-              <ShoppingBag size={15} /> 
-              <span>Cart</span>
-              {cart.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-rose-500 to-red-500 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black border-2 border-white dark:border-slate-900">
-                  {cart.length}
-                </span>
-              )}
-            </button>
-
-            <div className="w-[1px] h-5 bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
-
-            <button onClick={() => setDarkMode(!darkMode)} className="p-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:scale-105 transition-all">
-              {darkMode ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
+            <button 
+              onClick={() => setPage('shop')} 
+              className="w-full bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-black py-3 rounded-xl text-xs uppercase cursor-pointer hover:opacity-90 border dark:border-slate-700"
+            >
+              Continue Shopping
             </button>
           </div>
         </div>
-      </header>
+      </div>
+    );
+  }
 
-      <main className="max-w-6xl mx-auto px-4 py-6 z-10 relative">
-        <AnimatePresence mode="wait">
-          
-          {/* 1. SHOP VIEW */}
-          {page === 'shop' && (
-            <motion.div key="shop" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-8">
-              <div className="relative h-48 sm:h-64 rounded-3xl overflow-hidden shadow-xl border border-slate-200/30 dark:border-slate-800/50">
-                <AnimatePresence mode="wait">
-                  <motion.div key={currentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className={`absolute inset-0 bg-gradient-to-r ${heroSlides[currentSlide].bg} p-6 sm:p-10 flex flex-col justify-center text-white`}>
-                    <span className="w-fit px-3 py-1 bg-white/10 backdrop-blur-md text-[10px] sm:text-xs font-black rounded-full uppercase mb-2.5 sm:mb-4 border border-white/10">{heroSlides[currentSlide].badge}</span>
-                    <h2 className="text-lg sm:text-3xl font-black max-w-xl leading-snug">{heroSlides[currentSlide].title}</h2>
-                    <p className="text-[11px] sm:text-sm opacity-80 mt-1 sm:mt-2 font-medium max-w-md">{heroSlides[currentSlide].subtitle}</p>
-                  </motion.div>
-                </AnimatePresence>
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-                  {heroSlides.map((_, idx) => (
-                    <button key={idx} onClick={() => setCurrentSlide(idx)} className={`h-1.5 rounded-full transition-all ${idx === currentSlide ? 'w-5 bg-white' : 'w-1.5 bg-white/40'}`} />
-                  ))}
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24 md:pb-12 min-h-[70vh]">
+      <div className="lg:col-span-7">
+        <button onClick={() => setPage('shop')} className="flex items-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400 mb-5 hover:text-blue-600 dark:hover:text-cyan-400 uppercase cursor-pointer"><ArrowLeft size={14} /> Return to Shop</button>
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-6 flex items-center gap-2"><ShoppingBag size={22} className="text-blue-600 dark:text-cyan-400" /> Shopping Cart ({cart.length})</h2>
+        
+        {cart.length === 0 ? (
+          <div className="text-slate-500 bg-white dark:bg-slate-900 p-12 rounded-3xl border border-slate-200/60 dark:border-slate-800 text-center shadow-sm w-full">
+            <ShoppingBag size={48} className="mx-auto text-slate-300 dark:text-slate-700 mb-3" />
+            <p className="text-sm font-medium">Your shopping cart is empty!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {cart.map((item, index) => (
+              <motion.div key={index} layout className="flex items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
+                <img src={item.images?.[0] || item.image} alt={item.name} className="w-16 h-16 object-contain rounded-xl bg-slate-50 dark:bg-slate-950 p-1 border dark:border-slate-800" />
+                <div className="flex-grow">
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base line-clamp-1">{item.name}</h4>
+                  <span className="text-slate-900 dark:text-cyan-400 font-black text-sm block mt-0.5">৳ {item.price}</span>
+                </div>
+                <button onClick={() => removeFromCart(index)} className="text-rose-500 p-2.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl cursor-pointer"><Trash2 size={18} /></button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {cart.length > 0 && (
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4 flex items-center gap-1.5 border-b pb-3 border-slate-100 dark:border-slate-800"><Truck size={18} className="text-blue-500" /> Shipping & Payment Information</h3>
+            <form onSubmit={handleCheckout} className="space-y-4">
+              <div>
+                <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1"><User size={12} /> Your Full Name</label>
+                <input type="text" required placeholder="e.g., Md. Yousuf Khan" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">📱 Mobile Number</label>
+                  <input type="tel" required placeholder="01XXXXXXXXX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"><MessageSquare size={12} /> WhatsApp (Optional)</label>
+                  <input type="tel" placeholder="01XXXXXXXXX" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:outline-none" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                <div className="bg-white dark:bg-slate-900/40 p-2 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 flex items-center gap-2 sm:gap-3 shadow-sm"><div className="p-2 bg-blue-500/10 text-blue-600 dark:text-cyan-400 rounded-xl"><Truck size={16} /></div><div><h4 className="text-[10px] sm:text-xs font-black">Fast Delivery</h4></div></div>
-                <div className="bg-white dark:bg-slate-900/40 p-2 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 flex items-center gap-2 sm:gap-3 shadow-sm"><div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl"><RefreshCw size={16} /></div><div><h4 className="text-[10px] sm:text-xs font-black">7-Day Return</h4></div></div>
-                <div className="bg-white dark:bg-slate-900/40 p-2 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/40 flex items-center gap-2 sm:gap-3 shadow-sm"><div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl"><Headphones size={16} /></div><div><h4 className="text-[10px] sm:text-xs font-black">24/7
+              <div>
+                <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"><MapPin size={12} /> Select District</label>
+                <select required value={district} onChange={(e) => setDistrict(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                  <option value="">-- Select Destination --</option>
+                  <option value="Dhaka">Inside Dhaka (Delivery 60৳)</option>
+                  <option value="Outside">Outside Dhaka (Delivery 120৳)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Detailed Address (Village, Thana, Road No)</label>
+                <textarea required placeholder="Write complete structural address details here..." value={fullAddress} onChange={(e) => setFullAddress(e.target.value)} className="w-full p-3 h-16 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:outline-none resize-none" />
+              </div>
+
+              <div className="pt-2">
+                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Select Payment Method</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button type="button" onClick={() => setPaymentMethod('cod')} className={`p-2.5 rounded-xl border text-[11px] sm:text-xs font-black flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-500/10 text-blue-600 dark:text-cyan-400' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}><Truck size={14} /> Cash On Delivery</button>
+                  <button type="button" onClick={() => setPaymentMethod('bkash')} className={`p-2.5 rounded-xl border text-[11px] sm:text-xs font-black flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${paymentMethod === 'bkash' ? 'border-pink-500 bg-pink-500/10 text-pink-600' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}><Smartphone size={14} /> bKash</button>
+                  <button type="button" onClick={() => setPaymentMethod('nagad')} className={`p-2.5 rounded-xl border text-[11px] sm:text-xs font-black flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${paymentMethod === 'nagad' ? 'border-orange-500 bg-orange-500/10 text-orange-600' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}><Smartphone size={14} /> Nagad</button>
+                </div>
+              </div>
+
+              {paymentMethod !== 'cod' && (
+                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border dark:border-slate-800">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">👉 Please Send Money total <strong>৳{finalAmount}</strong> to our Personal Number (<strong>01771183608</strong>) and input credentials below.</p>
+                  <div><input type="tel" required placeholder="Sender Wallet Account Number" value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} className="w-full p-2.5 text-xs rounded-lg border dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none" /></div>
+                  <div><input type="text" required placeholder="Transaction ID (TxID)" value={trxId} onChange={(e) => setTrxId(e.target.value)} className="w-full p-2.5 text-xs rounded-lg border dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none" /></div>
+                </motion.div>
+              )}
+
+              <div className="border-t pt-4 border-slate-100 dark:border-slate-800/80 text-xs space-y-2 text-slate-600 dark:text-slate-400 font-medium">
+                <div className="flex justify-between"><span>Subtotal Price:</span><span>৳ {totalPrice}</span></div>
+                <div className="flex justify-between"><span>Delivery Charge:</span><span>৳ {deliveryCharge}</span></div>
+                <div className="flex justify-between font-black text-sm text-slate-900 dark:text-white border-t pt-2 dark:border-slate-800/40"><span>Grand Total Bill:</span><span className="text-base font-black text-blue-600 dark:text-cyan-400">৳ {finalAmount}</span></div>
+              </div>
+
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-xl text-xs sm:text-sm shadow-md uppercase tracking-wider mt-2 cursor-pointer">Confirm Order Placement</motion.button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
