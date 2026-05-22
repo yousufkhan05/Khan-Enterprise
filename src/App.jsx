@@ -95,10 +95,9 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
     clearCart(); 
   };
 
-  // 📝 এখানে ফুটার ফিক্সড করার জন্য min-h-[70vh] লেয়ার দেওয়া হয়েছে
   if (isOrdered && lastOrderDetails) {
     return (
-      <div className="min-h-[70vh] flex flex-col justify-center items-center py-6">
+      <div className="min-h-[70vh] flex flex-col justify-center items-center py-6 w-full">
         <div className="w-full max-w-xl p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-2xl">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -108,7 +107,6 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
             <p className="text-xs text-slate-400 mt-1">Thank you for shopping with us. Your invoice is ready below.</p>
           </div>
 
-          {/* PDF Invoice Area */}
           <div 
             id="invoice-download-area" 
             className="bg-white text-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm text-left font-sans text-xs space-y-4"
@@ -189,7 +187,7 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24 md:pb-12 min-h-[70vh]">
+    <div className="max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24 md:pb-12 min-h-[70vh] w-full">
       <div className="lg:col-span-7">
         <button onClick={() => setPage('shop')} className="flex items-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400 mb-5 hover:text-blue-600 dark:hover:text-cyan-400 uppercase cursor-pointer"><ArrowLeft size={14} /> Return to Shop</button>
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-6 flex items-center gap-2"><ShoppingBag size={22} className="text-blue-600 dark:text-cyan-400" /> Shopping Cart ({cart.length})</h2>
@@ -216,9 +214,9 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
       </div>
 
       {cart.length > 0 && (
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-6 w-full">
           <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-xl">
-            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4 flex items-center gap-1.5 border-b pb-3 border-slate-100 dark:border-slate-800"><Truck size={18} className="text-blue-500" /> Shipping & Payment Information</h3>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4 flex items-center gap-1.5 border-b pb-3 border-slate-100 dark:border-slate-800"><Truck size={18} className="text-blue-500" /> Shipping & Payment</h3>
             <form onSubmit={handleCheckout} className="space-y-4">
               <div>
                 <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1"><User size={12} /> Your Full Name</label>
@@ -231,7 +229,7 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
                   <input type="tel" required placeholder="01XXXXXXXXX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"><MessageSquare size={12} /> WhatsApp (Optional)</label>
+                  <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"><MessageSquare size={12} /> WhatsApp</label>
                   <input type="tel" placeholder="01XXXXXXXXX" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:outline-none" />
                 </div>
               </div>
@@ -246,8 +244,8 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
               </div>
 
               <div>
-                <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Detailed Address (Village, Thana, Road No)</label>
-                <textarea required placeholder="Write complete structural address details here..." value={fullAddress} onChange={(e) => setFullAddress(e.target.value)} className="w-full p-3 h-16 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:outline-none resize-none" />
+                <label className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Detailed Address</label>
+                <textarea required placeholder="Complete structural address details..." value={fullAddress} onChange={(e) => setFullAddress(e.target.value)} className="w-full p-3 h-16 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:outline-none resize-none" />
               </div>
 
               <div className="pt-2">
@@ -261,8 +259,8 @@ export default function Cart({ cart, removeFromCart, clearCart, setPage, product
 
               {paymentMethod !== 'cod' && (
                 <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border dark:border-slate-800">
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">👉 Please Send Money total <strong>৳{finalAmount}</strong> to our Personal Number (<strong>01771183608</strong>) and input credentials below.</p>
-                  <div><input type="tel" required placeholder="Sender Wallet Account Number" value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} className="w-full p-2.5 text-xs rounded-lg border dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none" /></div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">👉 Send Money <strong>৳{finalAmount}</strong> to (<strong>01771183608</strong>)</p>
+                  <div><input type="tel" required placeholder="Sender Wallet Number" value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} className="w-full p-2.5 text-xs rounded-lg border dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none" /></div>
                   <div><input type="text" required placeholder="Transaction ID (TxID)" value={trxId} onChange={(e) => setTrxId(e.target.value)} className="w-full p-2.5 text-xs rounded-lg border dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none" /></div>
                 </motion.div>
               )}
